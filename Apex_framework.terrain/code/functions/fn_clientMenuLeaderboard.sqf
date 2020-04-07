@@ -19,7 +19,7 @@ _list = [
 	[0,'<Empty>',''],
 	[1,'Transporters','Transport pilot leaderboard'],
 	[2,'Revivalists','Combat life saver leaderboard'],
-	[3,'Ear Slicers','Ear collector leaderboard'],
+	[3,'---','---'],
 	[4,'Gold Diggers','Gold Tooth collector leaderboard'],
 	[5,'Tower Rangers','Radio tower leaderboard'],
 	[6,'Gitmo','Enemy capture leaderboard']
@@ -58,7 +58,7 @@ if (_type isEqualTo 'B1') exitWith {
 	if (!(_index isEqualTo -1)) then {
 		_leaderboardID = (_list select _index) select 0;
 		lnbClear 1808;
-		if (_leaderboardID isEqualTo 0) then {
+		if (_leaderboardID in [0,3]) then {
 			(_display displayCtrl 1809) ctrlSetText 'Player';
 			(_display displayCtrl 1810) ctrlSetText 'Role';
 			(_display displayCtrl 1811) ctrlSetText 'Rating';
@@ -66,7 +66,7 @@ if (_type isEqualTo 'B1') exitWith {
 				lnbSetColumnsPos [1808,[(1 * (safezoneW * 0.03)),(4 * (safezoneW * 0.03)),(7 * (safezoneW * 0.03)),(10 * (safezoneW * 0.03))]];
 				{
 					_object = _x;
-					lnbAddRow [1808,[(name _object),(getText (configFile >> 'CfgVehicles' >> (typeOf _object) >> 'displayName')),(str (rating _object))]];
+					lnbAddRow [1808,[(name _object),(['GET_ROLE_DISPLAYNAME',(_object getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable ['QS_fnc_roles',{'rifleman'}])),(str (rating _object))]];
 					if (!((squadParams _object) isEqualTo [])) then {
 						if (!((((squadParams _object) select 0) select 4) isEqualTo '')) then {
 							lnbSetPicture [1808,[_forEachIndex,3],(((squadParams _object) select 0) select 4)];

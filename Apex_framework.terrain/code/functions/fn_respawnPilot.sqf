@@ -16,7 +16,7 @@ __________________________________________________/*/
 
 _worldName = worldName;
 _typeL = toLower (typeOf player);
-if (_typeL in ['b_fighter_pilot_f']) exitWith {
+if ((player getUnitTrait 'QS_trait_fighterPilot') || (_typeL in ['b_fighter_pilot_f'])) exitWith {
 	if (!((missionNamespace getVariable ['QS_missionConfig_carrierEnabled',0]) isEqualTo 0)) then {
 		['RESPAWN_PLAYER'] call (missionNamespace getVariable 'QS_fnc_carrier');
 	} else {
@@ -33,6 +33,10 @@ if (_typeL in ['b_fighter_pilot_f']) exitWith {
 				player setDir 100.961;
 				player setPosWorld [8055.05,10014.9,30.0609];
 			};
+			if (_worldName isEqualTo 'Enoch') exitWith {
+				player setDir 68.4751;
+				player setPosWorld [4306.76,10501.5,68.1707];
+			};
 		} else {
 			player setDir (random 360);
 			player setPosATL [((markerPos 'QS_marker_respawn_jetpilot') select 0),((markerPos 'QS_marker_respawn_jetpilot') select 1), 0];	/*/ Edit the 0 here to change elevation /*/
@@ -45,7 +49,7 @@ if ((missionNamespace getVariable ['QS_missionConfig_carrierRespawn',0]) isEqual
 if ((missionNamespace getVariable ['QS_missionConfig_destroyerRespawn',0]) isEqualTo 1) exitWith {
 	['RESPAWN_PLAYER'] call (missionNamespace getVariable 'QS_fnc_destroyer');
 };
-if (_typeL in ['b_pilot_f','b_helipilot_f','b_t_helipilot_f','b_helicrew_f','o_pilot_f','o_helipilot_f','o_helicrew_f','i_pilot_f','i_helipilot_f','i_helicrew_f']) then {
+if ((player getUnitTrait 'QS_trait_pilot') || (_typeL in ['b_pilot_f','b_helipilot_f','b_t_helipilot_f','b_helicrew_f','o_pilot_f','o_helipilot_f','o_helicrew_f','i_pilot_f','i_helipilot_f','i_helicrew_f'])) then {
 	if ((missionNamespace getVariable ['QS_missionConfig_carrierRespawn',0]) isEqualTo 2) then {
 		['RESPAWN_PLAYER'] call (missionNamespace getVariable 'QS_fnc_carrier');
 	} else {
@@ -62,13 +66,17 @@ if (_typeL in ['b_pilot_f','b_helipilot_f','b_t_helipilot_f','b_helicrew_f','o_p
 				player setDir (random 360);
 				player setPosWorld [(8057.48 + 2 - (random 4)),(10291 + 2 - (random 4)),29.8258];
 			};
+			if (_worldName isEqualTo 'Enoch') exitWith {
+				player setDir (random 360);
+				player setPosWorld [3864.66,10137,67.7403];
+			};
 		} else {
 			player setDir (random 360);
 			player setPosATL [((markerPos 'QS_marker_respawn_helipilot') select 0),((markerPos 'QS_marker_respawn_helipilot') select 1), 0];	/*/ Edit the 0 here to change elevation /*/
 		};
 	};
 };
-if (_typeL in ['b_soldier_uav_f','b_t_soldier_uav_f']) then {
+if ((player getUnitTrait 'uavhacker') || (_typeL in ['b_soldier_uav_f','b_t_soldier_uav_f'])) then {
 	if ((missionNamespace getVariable ['QS_missionConfig_carrierRespawn',0]) isEqualTo 2) then {
 		['RESPAWN_PLAYER'] call (missionNamespace getVariable 'QS_fnc_carrier');
 	} else {
@@ -84,6 +92,10 @@ if (_typeL in ['b_soldier_uav_f','b_t_soldier_uav_f']) then {
 			if (_worldName isEqualTo 'Malden') exitWith {
 				player setDir 252.468;
 				player setPosWorld [8106.64,10104.3,42.5627];
+			};
+			if (_worldName isEqualTo 'Enoch') exitWith {
+				player setDir 258.922;
+				player setPosWorld [4110.76,10286.7,77.2023];
 			};
 		} else {
 			player setDir (random 360);

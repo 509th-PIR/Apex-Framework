@@ -36,4 +36,9 @@ if (_type isEqualTo 'onLoad') then {
 if (_type isEqualTo 'B1') then {
 	closeDialog 0;
 };
-if (_type isEqualTo 'onUnload') then {};
+if (_type isEqualTo 'onUnload') then {
+	0 spawn {
+		uiSleep 0.1;
+		createDialog 'QS_client_dialog_menu_roles';
+	};
+};

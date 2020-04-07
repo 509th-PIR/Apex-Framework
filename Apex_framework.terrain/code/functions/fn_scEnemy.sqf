@@ -114,9 +114,9 @@ _infantryGroupTypes = [
 	'OIA_ARTeam',2,
 	'OIA_InfTeam_HAT',2
 ];
-if (_worldName isEqualTo 'Tanoa') then {
+if (_worldName in ['Tanoa','Enoch']) then {
 	_staticTypes = ['O_HMG_01_high_F'];
-	_airTypes = ['i_heli_light_03_dynamicloadout_f','O_Heli_Light_02_dynamicLoadout_F','O_Heli_Light_02_v2_F'];
+	_airTypes = ['i_e_heli_light_03_dynamicloadout_f','O_Heli_Light_02_dynamicLoadout_F','O_Heli_Light_02_v2_F'];
 	_engineerType = 'O_T_Engineer_F';
 	_aaTypes = ['O_T_APC_Tracked_02_AA_ghex_F'];
 	_mrapTypes = ['O_T_MRAP_02_gmg_ghex_F','O_T_MRAP_02_hmg_ghex_F','O_T_LSV_02_armed_F'];
@@ -290,12 +290,12 @@ _grp = createGroup [_side,TRUE];
 _randomPos = ['RADIUS',_centerPos,_centerRadius,'LAND',[],FALSE,[],[],TRUE] call (missionNamespace getVariable 'QS_fnc_findRandomPos');
 if (_playerCount > 20) then {
 	_airTypes = if (_worldName isEqualTo 'Tanoa') then [
-		{['O_Heli_Light_02_dynamicLoadout_F','i_heli_light_03_dynamicloadout_f']},
+		{['O_Heli_Light_02_dynamicLoadout_F','i_e_heli_light_03_dynamicloadout_f']},
 		{['O_Heli_Light_02_dynamicLoadout_F','i_heli_light_03_dynamicloadout_f','O_Heli_Attack_02_dynamicLoadout_black_F','O_Heli_Attack_02_dynamicLoadout_F']}
 	];
 } else {
 	_airTypes = if (_worldName isEqualTo 'Tanoa') then [
-		{['O_Heli_Light_02_dynamicLoadout_F','i_heli_light_03_dynamicloadout_f']},
+		{['O_Heli_Light_02_dynamicLoadout_F','i_e_heli_light_03_dynamicloadout_f']},
 		{['O_Heli_Light_02_dynamicLoadout_F','i_heli_light_03_dynamicloadout_f','O_Heli_Attack_02_dynamicLoadout_black_F','O_Heli_Attack_02_dynamicLoadout_F']}
 	];
 };
@@ -353,28 +353,26 @@ if (!((typeOf _air) in ['O_Heli_Light_02_v2_F','O_Heli_Light_02_dynamicLoadout_F
 	_unit moveInGunner _air;
 	/*/
 };
-if ((toLower _airType) isEqualTo 'i_heli_light_03_dynamicloadout_f') then {
-	_unit = _grp createUnit [(['O_Soldier_AR_F','O_T_Soldier_AR_F'] select (_worldName isEqualTo 'Tanoa')),[0,0,0],[],0,'NONE'];
+if ((toLower _airType) in ['i_heli_light_03_dynamicloadout_f','i_e_heli_light_03_dynamicloadout_f']) then {
+	_unit = _grp createUnit [(['O_Soldier_AR_F','O_T_Soldier_AR_F'] select (_worldName in ['Tanoa','Enoch'])),[0,0,0],[],0,'NONE'];
 	_unit addBackpack 'B_AssaultPack_blk';
-	[_unit,'MMG_01_hex_ARCO_LP_F',3] call (missionNamespace getVariable 'QS_fnc_addWeapon');
+	[_unit,'MMG_01_hex_ARCO_LP_F',4] call (missionNamespace getVariable 'QS_fnc_addWeapon');
+	_unit addPrimaryWeaponItem 'optic_lrps';
 	_unit moveInCargo [_air,0];
 	_entityArray pushBack _unit;
-	_unit = _grp createUnit [(['O_Soldier_AR_F','O_T_Soldier_AR_F'] select (_worldName isEqualTo 'Tanoa')),[0,0,0],[],0,'NONE'];
+	_unit = _grp createUnit [(['O_Soldier_AR_F','O_T_Soldier_AR_F'] select (_worldName in ['Tanoa','Enoch'])),[0,0,0],[],0,'NONE'];
 	_unit addBackpack 'B_AssaultPack_blk';
-	[_unit,'MMG_01_hex_ARCO_LP_F',3] call (missionNamespace getVariable 'QS_fnc_addWeapon');
+	[_unit,'MMG_01_hex_ARCO_LP_F',4] call (missionNamespace getVariable 'QS_fnc_addWeapon');
+	_unit addPrimaryWeaponItem 'optic_lrps';
 	_unit moveInCargo [_air,1];
 	_entityArray pushBack _unit;
-	missionNamespace setVariable [
-		'QS_analytics_entities_created',
-		((missionNamespace getVariable 'QS_analytics_entities_created') + 2),
-		FALSE
-	];
+	missionNamespace setVariable ['QS_analytics_entities_created',((missionNamespace getVariable 'QS_analytics_entities_created') + 2),FALSE];
 	if (!(sunOrMoon isEqualTo 1)) then {
 		(_air turretUnit [0]) action ['SearchlightOn',_air];
 	};
 };
 [(units _grp),4] call (missionNamespace getVariable 'QS_fnc_serverSetAISkill');
-_grp setBehaviour 'AWARE';
+_grp setBehaviourStrong 'AWARE';
 _grp setCombatMode 'RED';
 _grp addVehicle _air;
 _grp enableAttack TRUE;
@@ -544,8 +542,7 @@ for '_x' from 0 to 1 step 0 do {
 			_unit assignAsCommander _vehicle;
 			_unit moveInCommander _vehicle;
 		} else {
-			createVehicleCrew _vehicle;
-			_grp = group (effectiveCommander _vehicle);
+			_grp = createVehicleCrew _vehicle;
 		};
 		if (_allowVehicles) then {
 			_vehicle setDir (_randomRoadPosition getDir (position ((roadsConnectedTo _randomRoad) select 0)));
@@ -773,7 +770,7 @@ for '_x' from 0 to 1 step 0 do {
 	_positionASL = AGLToASL _position;
 	_positionASL set [2,((_positionASL select 2) + 1)];
 	for '_x' from 0 to 9 step 1 do {
-		_randomPos = [_position,500,25,7.5,[[objNull,'VIEW',objNull],_positionASL,0.5]] call (missionNamespace getVariable 'QS_fnc_findOverwatchPos');
+		_randomPos = [_position,500,25,7.5,[[objNull,'VIEW',objNull],0.75]] call (missionNamespace getVariable 'QS_fnc_findOverwatchPos');
 		if ((([_randomPos select 0,_randomPos select 1] nearRoads 20) select {((_x isEqualType objNull) && (!((roadsConnectedTo _x) isEqualTo [])))}) isEqualTo []) exitWith {};
 	};
 	_grp = [_randomPos,(random 360),_side,'OI_SniperTeam',FALSE] call (missionNamespace getVariable 'QS_fnc_spawnGroup');

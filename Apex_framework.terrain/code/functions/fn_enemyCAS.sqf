@@ -58,7 +58,7 @@ _playerJetCount = count (allPlayers select {((toLower (typeOf (vehicle _x))) in 
 if (((count allPlayers) < 10) && (_playerJetCount isEqualTo 0)) exitWith {};
 _jetSelect = selectRandomWeighted [
 	'O_Plane_CAS_02_dynamicLoadout_F',0.3,
-	'O_Plane_Fighter_02_F',([0.1,0.2] select (_playerJetCount > 0)),
+	'O_Plane_Fighter_02_F',([0,0.1] select (_playerJetCount > 0)),
 	'O_Plane_Fighter_02_Stealth_F',([0,0.1] select (_playerJetCount > 1)),
 	'I_Plane_Fighter_03_AA_F',0.1,
 	'I_Plane_Fighter_03_dynamicLoadout_F',0.3,
@@ -151,6 +151,7 @@ if ((toLower(typeOf _jetActual)) in ['c_plane_civil_01_racing_f']) then {
 	[_jetActual] call (missionNamespace getVariable 'QS_fnc_Q51');
 };
 _jetActual lock 2;
+_jetActual addEventHandler ['IncomingMissile',(missionNamespace getVariable 'QS_fnc_AIXMissileCountermeasure')];
 if (!(['cluster',(typeOf _jetActual),FALSE] call (missionNamespace getVariable 'QS_fnc_inString'))) then {
 	[_jetActual,([1,2] select ((random 1) > 0.666)),[]] call (missionNamespace getVariable 'QS_fnc_vehicleLoadouts');
 } else {
@@ -253,7 +254,7 @@ if (_new) then {_jetPilot setRank 'COLONEL';} else {_jetPilot setRank 'MAJOR';};
 _grp move (missionNamespace getVariable ['QS_AOpos',[(worldSize / 2),(worldSize / 2),500]]);
 _grp enableAttack TRUE;
 _grp setCombatMode 'RED';
-_grp setBehaviour 'COMBAT';
+_grp setBehaviourStrong 'COMBAT';
 _grp setSpeedMode 'FULL';
 [9,EAST,_grp,(leader _grp),_jetActual] call (missionNamespace getVariable 'QS_fnc_AIGetKnownEnemies');
 if (!((toLower _jetSelect) in ['o_plane_fighter_02_stealth_f'])) then {

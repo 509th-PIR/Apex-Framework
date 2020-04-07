@@ -13,6 +13,21 @@ Description:
 	Setup Client Arsenal
 ____________________________________________________/*/
 
+player setVariable ['bis_addVirtualWeaponCargo_cargo',[[],[],[],[]],FALSE];
+if ((missionNamespace getVariable ['QS_missionConfig_Arsenal',0]) isEqualTo 3) exitWith {
+	// Populate faces list
+	private _data = [];
+	private _index = -1;
+	{
+		_index = _foreachindex;
+		{
+			if (getnumber (_x >> 'disabled') isEqualTo 0 && gettext (_x >> 'head') != '' && configname _x != 'Default') then {
+				_data pushBack [_x,_index];
+			};
+		} foreach ('isclass _x' configclasses _x);
+	} foreach ('isclass _x' configclasses (configfile >> 'cfgfaces'));
+	(missionNamespace getVariable 'bis_fnc_arsenal_data') set [15,_data];
+};
 private _QS_restrictedItems = [
 	'h_helmetleadero_oucamo',
 	'h_helmetleadero_ocamo',
@@ -77,7 +92,8 @@ private _QS_restrictedItems = [
 	'integrated_nvg_ti_1_f',
 	'o_uavterminal',
 	'i_uavterminal',
-	'c_uavterminal'
+	'c_uavterminal',
+	'i_e_uavterminal'
 ];
 private _QS_restrictedWeapons = [
 	'apersminedispenser_mag'
@@ -134,8 +150,39 @@ private _QS_restrictedBackpacks = [
 	'o_uav_06_medical_backpack_f',
 	'i_uav_06_medical_backpack_f',
 	'c_idap_uav_06_medical_backpack_f',
-	'c_uav_06_medical_backpack_f'
+	'c_uav_06_medical_backpack_f',
+	'i_e_mortar_01_support_f',
+	'i_e_mortar_01_weapon_f',
+	'i_e_hmg_01_support_high_f',
+	'i_e_hmg_01_support_f',
+	'i_e_gmg_01_a_weapon_f',
+	'i_e_hmg_01_a_weapon_f',
+	'i_e_hmg_01_high_weapon_f',
+	'i_e_hmg_01_weapon_f',
+	'i_e_gmg_01_high_weapon_f',
+	'i_e_gmg_01_weapon_f',
+	'i_e_ugv_02_demining_backpack_f',
+	'i_ugv_02_science_backpack_f',
+	'o_ugv_02_science_backpack_f',
+	'i_e_ugv_02_science_backpack_f',
+	'i_e_aa_01_weapon_f',
+	'i_e_at_01_weapon_f',
+	'i_e_uav_06_backpack_f',
+	'i_e_uav_06_medical_backpack_f',
+	'i_e_uav_01_backpack_f',
+	'c_idap_ugv_02_demining_backpack_f',
+	'i_ugv_02_demining_backpack_f',
+	'o_ugv_02_demining_backpack_f'
 ];
+if ((player getVariable ['QS_unit_side',WEST]) in [EAST,RESISTANCE]) then {
+	_QS_restrictedItems = _QS_restrictedItems -	[
+		'','u_i_c_soldier_bandit_4_f','u_i_c_soldier_bandit_1_f','u_i_c_soldier_bandit_2_f','u_i_c_soldier_bandit_5_f','u_i_c_soldier_bandit_3_f','u_o_t_soldier_f',
+		'u_o_combatuniform_ocamo','u_o_combatuniform_oucamo','u_o_fullghillie_ard','u_o_t_fullghillie_tna_f','u_o_fullghillie_lsh','u_o_fullghillie_sard','u_o_t_sniper_f',
+		'u_o_ghilliesuit','u_bg_guerrilla_6_1','u_bg_guerilla1_1','u_bg_guerilla1_2_f','u_bg_guerilla2_2','u_bg_guerilla2_1','u_bg_guerilla2_3','u_bg_guerilla3_1','u_bg_leader',
+		'u_o_officer_noinsignia_hex_f','u_o_t_officer_f','u_o_officeruniform_ocamo','u_i_c_soldier_para_2_f','u_i_c_soldier_para_3_f','u_i_c_soldier_para_5_f','u_i_c_soldier_para_4_f',
+		'u_i_c_soldier_para_1_f','u_o_pilotcoveralls','u_o_specopsuniform_ocamo','u_i_c_soldier_camo_f'
+	];
+};
 missionNamespace setVariable ['QS_arsenal_missionBlacklist',[[_QS_restrictedItems,_QS_restrictedWeapons,_QS_restrictedMagazines,_QS_restrictedBackpacks],(_QS_restrictedItems + _QS_restrictedWeapons + _QS_restrictedMagazines + _QS_restrictedBackpacks)],FALSE];
 _isBlacklisted = (missionNamespace getVariable ['QS_missionConfig_Arsenal',0]) isEqualTo 2;
 if ((_isBlacklisted) || {((missionNamespace getVariable ['QS_missionConfig_Arsenal',0]) isEqualTo 0)}) then {
@@ -168,7 +215,7 @@ if ((_isBlacklisted) || {((missionNamespace getVariable ['QS_missionConfig_Arsen
 		_isBase = if (isarray (_class >> 'muzzles')) then {((_className call (missionNamespace getVariable 'QS_fnc_baseWeapon')) == _className)} else {TRUE};
 		if ((_scope isEqualTo 2) && {(!((gettext (_class >> 'model')) isEqualTo ''))} && _isBase) then {
 			_weaponType = (_className call (missionNamespace getVariable 'BIS_fnc_itemType'));
-			_weaponTypeCategory = _weaponType select 0;
+			_weaponTypeCategory = _weaponType # 0;
 			if (_weaponTypeCategory != 'VehicleWeapon') then {
 				if (!( (toLower _className) in _QS_restrictedItems)) then {
 					_cfgItems pushBackUnique _className;
@@ -229,11 +276,11 @@ if ((_isBlacklisted) || {((missionNamespace getVariable ['QS_missionConfig_Arsen
 		_QS_restrictedBackpacks = [];
 	};
 	_cfgBackpacks = _cfgBackpacks select {(!((toLower _x) in _QS_restrictedBackpacks))};
-	missionNamespace setVariable ['bis_addVirtualWeaponCargo_cargo',[_cfgItems,_cfgWeapons,_cfgMagazines,_cfgBackpacks],FALSE];	
+	player setVariable ['bis_addVirtualWeaponCargo_cargo',[_cfgItems,_cfgWeapons,_cfgMagazines,_cfgBackpacks],FALSE];	
 };
-_data = call (missionNamespace getVariable 'QS_data_arsenal');
+_data = [(player getVariable ['QS_unit_side',WEST]),(player getVariable ['QS_unit_role','rifleman'])] call (missionNamespace getVariable 'QS_data_arsenal');
 private _weapons = [];
-(_data select ([1,0] select _isBlacklisted)) params ['_itemsData','_magazines','_backpacks','_weapons'];
+(_data # ([1,0] select _isBlacklisted)) params ['_itemsData','_magazines','_backpacks','_weapons'];
 if (!(_backpacks isEqualTo [])) then {
 	_backpacks = _backpacks select {((_x call (missionNamespace getVariable 'QS_fnc_baseBackpack')) == _x)};
 };
@@ -241,7 +288,7 @@ if (!(_weapons isEqualTo [])) then {
 	_weapons = _weapons select {((_x call (missionNamespace getVariable 'QS_fnc_baseWeapon')) == _x)};
 };
 private _items = [];
-private _goggles = _itemsData select 5;
+private _goggles = _itemsData # 5;
 if (!(_goggles isEqualTo [])) then {
 	_binGoggles = configFile >> 'CfgGlasses';
 	private _goggleClassname = '';
@@ -261,7 +308,7 @@ if (!(_goggles isEqualTo [])) then {
 	_items = _items + _x;
 } forEach _itemsData;
 if (_isBlacklisted) exitWith {
-	_cargo = missionNamespace getvariable ['bis_addVirtualWeaponCargo_cargo',[[],[],[],[]]];
+	_cargo = player getvariable ['bis_addVirtualWeaponCargo_cargo',[[],[],[],[]]];
 	_cargo params ['_cargoItems','_cargoWeapons','_cargoMagazines','_cargoBackpacks'];
 	private _class = '';
 	private _foundIndex = -1;
@@ -299,11 +346,11 @@ if (_isBlacklisted) exitWith {
 			};
 		} forEach _backpacks;
 	};
-	missionNamespace setVariable ['bis_addVirtualWeaponCargo_cargo',[_cargoItems,_cargoWeapons,_cargoMagazines,_cargoBackpacks],FALSE];	
+	player setVariable ['bis_addVirtualWeaponCargo_cargo',[_cargoItems,_cargoWeapons,_cargoMagazines,_cargoBackpacks],FALSE];	
 };
 {
-	if (!((_x select 1) isEqualTo [])) then {
-		[missionNamespace,(_x select 1),FALSE,FALSE] call (missionNamespace getVariable (_x select 0));
+	if (!((_x # 1) isEqualTo [])) then {
+		[player,(_x # 1),FALSE,FALSE] call (missionNamespace getVariable (_x # 0));
 	};
 } forEach [
 	[(format ['BIS_fnc_%1VirtualItemCargo',(['add','remove'] select _isBlacklisted)]),(_items select {(!( (toLower _x) in _QS_restrictedItems))})],
@@ -311,4 +358,3 @@ if (_isBlacklisted) exitWith {
 	[(format ['BIS_fnc_%1VirtualBackpackCargo',(['add','remove'] select _isBlacklisted)]),(_backpacks select {(!( (toLower _x) in _QS_restrictedBackpacks))})],
 	[(format ['BIS_fnc_%1VirtualWeaponCargo',(['add','remove'] select _isBlacklisted)]),(_weapons select {(!( (toLower _x) in _QS_restrictedWeapons))})]
 ];
-['Preload'] call (missionNamespace getVariable 'BIS_fnc_arsenal');

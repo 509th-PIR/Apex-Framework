@@ -6,7 +6,7 @@ Author:
 
 Last modified: 
 
-	30/09/2018 A3 1.84 by Quiksilver
+	13/01/2019 A3 1.88 by Quiksilver
 
 Description:
 
@@ -105,7 +105,8 @@ private [
 	'_allDeadVehiclesCount','_deadVehiclesLimitMax','_QS_objWorldPos','_sentencesEnabled','_supportMessagePopped','_QS_module_emergentTasks','_QS_module_emergentTasks_delay',
 	'_QS_module_emergentTasks_checkDelay','_QS_module_emergentTasks_array','_QS_module_emergentTasks_add','_QS_attemptRecycle','_model','_configClass','_QS_module_emergentTask_maxType',
 	'_QS_module_emergentTask_countType','_QS_module_emergentTasks_medevac','_arrayIndex','_grid_availableRegions','_grid_availableRegion_id','_grid_availableAOs','_grid_availableAO_id',
-	'_grid_ao_data','_grid_ao_nearRadius','_grid_region_completionThreshold','_grid_markerEvalTimeout','_estimatedTimeLeft','_true','_false','_endl','_maxPrisoners','_element'
+	'_grid_ao_data','_grid_ao_nearRadius','_grid_region_completionThreshold','_grid_markerEvalTimeout','_estimatedTimeLeft','_true','_false','_endl','_maxPrisoners','_element',
+	'_trigger_delete_fobVehicles'
 ];
 _QS_productVersion = productVersion;
 _QS_worldName = worldName;
@@ -225,14 +226,14 @@ _QS_module_aoSmallTasks_delay = 5;
 _QS_module_aoSmallTasks_checkDelay = _timeNow + _QS_module_aoSmallTasks_delay;
 _QS_module_aoSmallTasks_timeout = 1200;
 _QS_module_aoSmallTasks_timeoutDelay = _timeNow + _QS_module_aoSmallTasks_timeout;
-_QS_module_aoSmallTasks_list = [1,2,3];
+_QS_module_aoSmallTasks_list = [1,2];
 _QS_module_aoSmallTasks_current = -1;
 _QS_module_aoSmallTasks_data = [-1,objNull,{}];
 _QS_module_aoSmallTasks_isActive = FALSE;
 
 /*/============================ FOBS*/
 
-_module_fob_enabled = _QS_worldName in ['Altis','Tanoa'];
+_module_fob_enabled = _QS_worldName in ['Altis','Tanoa','Malden','Enoch'];
 _module_fob_delay = 5;
 _module_fob_checkDelay = _timeNow + _module_fob_delay;
 _module_fob_activeRegion = -1;
@@ -266,6 +267,7 @@ _module_fob_assault_duration = 480;
 missionNamespace setVariable ['QS_fob_cycleAttack',FALSE,FALSE];
 _QS_module_fob_sideShownHUD_radarON = [TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE,TRUE];
 _QS_module_fob_sideShownHUD_radarOFF = [TRUE,TRUE,FALSE,FALSE,TRUE,TRUE,TRUE,TRUE];
+_trigger_delete_fobVehicles = FALSE;
 {
 	missionNamespace setVariable _x;
 } forEach [
@@ -401,7 +403,7 @@ _vehData = [] call (missionNamespace getVariable 'QS_data_vehicles');
 	if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0) then {
 		(missionNamespace getVariable 'QS_v_Monitor') pushBack _x;
 	} else {
-		if (!((_x select 9) isEqualTo -1)) then {
+		if (!((_x # 9) isEqualTo -1)) then {
 			(missionNamespace getVariable 'QS_v_Monitor') pushBack _x;
 		};
 	};
@@ -433,7 +435,7 @@ _fn_isPosSafe = {
 	{
 		if (!isNull _x) then {
 			if (isSimpleObject _x) then {
-				if (!(['helipad',((getModelInfo _x) select 1),FALSE] call (missionNamespace getVariable 'QS_fnc_inString'))) then {
+				if (!(['helipad',((getModelInfo _x) # 1),FALSE] call (missionNamespace getVariable 'QS_fnc_inString'))) then {
 					_return = FALSE;
 				};
 			};
@@ -442,7 +444,7 @@ _fn_isPosSafe = {
 	_return;
 };
 
-/*/==================== HIDDEN-FROM-PLAYERS FUNCTION*/
+/*/==================== GARBAGE MANAGER */
 
 _QS_corpseCollector = getMissionConfigValue ['corpseManagerMode',0];
 _QS_wreckCollector = getMissionConfigValue ['wreckManagerMode',0];
@@ -457,6 +459,7 @@ _QS_deleteThis = FALSE;
 _QS_attemptRecycle = FALSE;
 _missionObject = objNull;
 _missionObjectType = '';
+private _missionObjectsTicker = 0;
 _deleteNow = [];
 _jetJunk = [
 	'b_ejection_seat_plane_cas_01_f',
@@ -606,14 +609,14 @@ if (_QS_simulateWind) then {
 	diag_log format ['***** DEBUG ***** Weather wind array: %1',_QS_windWorkingArray];
 	_QS_windUpdate_checkDelay_timer = 60;
 	_QS_windUpdate_checkDelay = _timeNow + _QS_windUpdate_checkDelay_timer;
-	_QS_windNextValue = _QS_windWorkingArray select 0;
+	_QS_windNextValue = _QS_windWorkingArray # 0;
 	setWind _QS_windNextValue;
 };
 _QS_refreshWind = TRUE;
 if (_QS_simulateOvercast) then {
 	_QS_overcastUpdate = FALSE;
 	_QS_overcastArray = [date,_QS_worldName,'REALISM','OVERCAST'] call (missionNamespace getVariable 'QS_fnc_weatherConfig');
-	_QS_overcastWorkingArray = _QS_overcastArray select 0;
+	_QS_overcastWorkingArray = _QS_overcastArray # 0;
 	diag_log format ['***** DEBUG ***** Weather overcast array: %1',_QS_overcastWorkingArray];
 	_QS_overcastUpdate_checkDelay_timer = 30;
 	_QS_overcastUpdate_checkDelay = _timeNow + _QS_overcastUpdate_checkDelay_timer;
@@ -622,7 +625,7 @@ _QS_refreshOvercast = TRUE;
 
 _QS_rainSimulated = FALSE;
 if ((random 1) > 0.666) then {
-	_QS_simulateRain = _QS_overcastArray select 1;
+	_QS_simulateRain = _QS_overcastArray # 1;
 } else {
 	_QS_simulateRain = FALSE;
 };
@@ -672,7 +675,7 @@ if (_QS_worldName isEqualTo 'Tanoa') then {
 	_QS_rainHoursMax = 6;
 };
 
-_QS_day = date select 2;
+_QS_day = date # 2;
 _QS_day_wind = _QS_day;
 _QS_day_overcast = _QS_day;
 _QS_day_rain = _QS_day;
@@ -693,8 +696,8 @@ _QS_saveDate = TRUE;
 _QS_saveDate_delay = _timeNow + 1800;
 _QS_timeAccelerationManager = TRUE;
 _QS_solarHorizons = _QS_date call (missionNamespace getVariable 'BIS_fnc_sunriseSunsetTime');
-_QS_sunrise = _QS_solarHorizons select 0;
-_QS_sunset = _QS_solarHorizons select 1;
+_QS_sunrise = _QS_solarHorizons # 0;
+_QS_sunset = _QS_solarHorizons # 1;
 _QS_solarNoon = (_QS_sunrise + _QS_sunset) / 2;
 _QS_timeAcceleration_inProgress = 0;
 _QS_darkAccelerated = TRUE;
@@ -764,8 +767,8 @@ _eastVehicles_checkDelay = 900;
 _eastVehicles_delay = time + _eastVehicles_checkDelay;
 
 _QS_fnc_reveal = {
-	_grp = _this select 0;
-	_toReveal = _this select 1;	
+	_grp = _this # 0;
+	_toReveal = _this # 1;	
 	{
 		_grp reveal [_x,(2 + (random 2))];
 	} count _toReveal;
@@ -777,7 +780,7 @@ private _minefieldSpawned = FALSE;
 _QS_checkUAVsTime_delay = 10;
 _QS_checkUAVsTime = time + _QS_checkUAVsTime_delay;
 _QS_uavRespawnDelay = 600;
-_QS_cleanup_delay = 30;
+_QS_cleanup_delay = 45;
 _QS_cleanup_checkDelay = time + _QS_cleanup_delay;
 
 _fps = diag_fps;
@@ -890,6 +893,18 @@ if (_QS_module_recruitableAI) then {
 				[objNull,300,false,{},"B_helicrew_F",[8063.57,10295.8,0.000993729],84.3278,false,0,-1,FALSE]
 			];
 		};
+		if (_QS_worldName isEqualTo 'Enoch') then {
+			_QS_module_recruitableAI_data = [
+				[objNull,60,false,{},"B_W_Soldier_AR_F",[4054.99,10201,0.00144196],315.519,false,0,-1,TRUE],
+				[objNull,60,false,{},"B_W_Soldier_AR_F",[4053.83,10200.1,0.00144196],320.469,false,0,-1,FALSE],
+				[objNull,60,false,{},"B_W_soldier_M_F",[4052.44,10198.6,0.00144958],316.122,false,0,-1,TRUE],
+				[objNull,60,false,{},"B_W_soldier_M_F",[4051.46,10197.6,0.00144196],316.122,false,0,-1,FALSE],
+				[objNull,60,false,{},"B_W_Medic_F",[4056.53,10202.9,0.00144196],314.673,false,0,-1,TRUE],
+				[objNull,60,false,{},"B_W_Medic_F",[4057.55,10204.1,0.00144196],314.615,false,0,-1,TRUE],
+				[objNull,300,false,{},"B_W_Engineer_F",[4050.13,10196.2,0.00144196],312.056,false,0,-1,TRUE],
+				[objNull,300,false,{},"B_W_Engineer_F",[4049.33,10195.2,0.00144196],312.056,false,0,-1,FALSE]
+			];
+		};
 	} else {
 		_QS_module_recruitableAI_data = missionNamespace getVariable ['QS_register_rAI',[]];
 	};
@@ -901,11 +916,21 @@ if (_QS_module_recruitableAI) then {
 			'B_CTRG_Soldier_AR_tna_F','B_CTRG_Soldier_LAT_tna_F','B_CTRG_Soldier_M_tna_F'
 		] call (missionNamespace getVariable 'QS_fnc_arrayShuffle');
 	} else {
-		_QS_module_recruitableAI_unitTypes = [	
-			'B_Soldier_A_F','B_soldier_AR_F','B_Soldier_GL_F','B_soldier_M_F',
-			'B_Soldier_lite_F','B_Sharpshooter_F','B_soldier_AAR_F','B_G_Sharpshooter_F',
-			'B_G_soldier_LAT_F','B_G_Soldier_AR_F'
-		] call (missionNamespace getVariable 'QS_fnc_arrayShuffle');
+		if (_QS_worldName isEqualTo 'Enoch') then {
+			_QS_module_recruitableAI_unitTypes = [	
+				'B_W_Soldier_AR_F',
+				'B_W_Medic_F',
+				'B_W_Engineer_F',
+				'B_W_soldier_M_F',
+				'B_W_Soldier_LAT2_F'
+			] call (missionNamespace getVariable 'QS_fnc_arrayShuffle');		
+		} else {
+			_QS_module_recruitableAI_unitTypes = [	
+				'B_Soldier_A_F','B_soldier_AR_F','B_Soldier_GL_F','B_soldier_M_F',
+				'B_Soldier_lite_F','B_Sharpshooter_F','B_soldier_AAR_F','B_G_Sharpshooter_F',
+				'B_G_soldier_LAT_F','B_G_Soldier_AR_F'
+			] call (missionNamespace getVariable 'QS_fnc_arrayShuffle');
+		};
 	};
 	missionNamespace setVariable ['QS_RD_recruitableAI_1',nil,FALSE];
 };
@@ -971,7 +996,7 @@ if (isNil {profileNamespace getVariable 'QS_leaderboards'}) then {
 };
 _QS_module_leaderboard_delay = 20;
 _QS_module_leaderboard_checkDelay = _timeNow + _QS_module_leaderboard_delay;
-_QS_ladder_weekday = ((profileNamespace getVariable 'QS_leaderboards') select 0) select 0;
+_QS_ladder_weekday = ((profileNamespace getVariable 'QS_leaderboards') # 0) # 0;
 if (_QS_ladder_weekday isEqualType 0) then {
 	(profileNamespace getVariable 'QS_leaderboards') set [0,[_QS_system_weekday,_QS_missionStart]];
 };
@@ -1003,15 +1028,15 @@ if (_QS_leaderboard_reset) then {
 		'QS_leaderboards',
 		[
 			[_QS_system_weekday,_QS_missionStart],
-			((profileNamespace getVariable 'QS_leaderboards') select 1),
-			((profileNamespace getVariable 'QS_leaderboards') select 2),
-			((profileNamespace getVariable 'QS_leaderboards') select 3),
-			((profileNamespace getVariable 'QS_leaderboards') select 4),
-			((profileNamespace getVariable 'QS_leaderboards') select 5),
-			((profileNamespace getVariable 'QS_leaderboards') select 6),
-			((profileNamespace getVariable 'QS_leaderboards') select 7),
-			((profileNamespace getVariable 'QS_leaderboards') select 8),
-			((profileNamespace getVariable 'QS_leaderboards') select 9)
+			((profileNamespace getVariable 'QS_leaderboards') # 1),
+			((profileNamespace getVariable 'QS_leaderboards') # 2),
+			((profileNamespace getVariable 'QS_leaderboards') # 3),
+			((profileNamespace getVariable 'QS_leaderboards') # 4),
+			((profileNamespace getVariable 'QS_leaderboards') # 5),
+			((profileNamespace getVariable 'QS_leaderboards') # 6),
+			((profileNamespace getVariable 'QS_leaderboards') # 7),
+			((profileNamespace getVariable 'QS_leaderboards') # 8),
+			((profileNamespace getVariable 'QS_leaderboards') # 9)
 		]
 	];
 };
@@ -1069,7 +1094,7 @@ _QS_module_aoCiv_civ = objNull;
 
 /*/===== Cas Respawn /*/
 
-_QS_module_cas_respawn = TRUE;
+_QS_module_cas_respawn = (missionNamespace getVariable ['QS_missionConfig_CAS',2]) isEqualTo 3;
 _QS_module_cas_respawn_threshold = 10;
 _QS_module_cas_respawn_checkDelay = _timeNow + 15;
 _casJetObj = objNull;
@@ -1077,6 +1102,7 @@ _casUID = '';
 _casAllowanceIndex = -1;
 _casPilot = objNull;
 _casAllowancePool = -1;
+_casAllowance = missionNamespace getVariable ['QS_CAS_jetAllowance_value',3];
 
 /*/===== Module OPSEC/*/
 
@@ -1089,7 +1115,7 @@ _QS_module_opsec_clientHeartbeat = TRUE;
 _QS_module_opsec_checkMarkers_whitelistedMarkers = [];
 _markerData = [] call (compile (preprocessFileLineNumbers 'code\config\QS_data_markers.sqf'));
 {
-	_QS_module_opsec_checkMarkers_whitelistedMarkers pushBack (_x select 0);
+	_QS_module_opsec_checkMarkers_whitelistedMarkers pushBack (_x # 0);
 } forEach _markerData;
 _markerCheck = toString [32,32,32];
 _markerData = nil;
@@ -1110,7 +1136,7 @@ _QS_module_dynSim = (missionNamespace getVariable ['QS_missionConfig_dynSim',1])
 _QS_module_dynSim_delay = 30;
 _QS_module_dynSim_checkDelay = _timeNow + _QS_module_dynSim_delay;
 {
-	(_x select 0) setDynamicSimulationDistance (_x select 1);
+	(_x # 0) setDynamicSimulationDistance (_x # 1);
 } forEach [
 	['GROUP',([1250,1000] select (_QS_worldName isEqualTo 'Tanoa'))],
 	['VEHICLE',([1000,750] select (_QS_worldName isEqualTo 'Tanoa'))],
@@ -1130,7 +1156,7 @@ _QS_module_emergentTask_maxType = 3;
 _QS_module_emergentTask_countType = 0;
 _QS_module_emergentTasks_medevac = TRUE;
 /*/===== Restart scheduler/*/
-_QS_module_restart = ((!((missionNamespace getVariable ['QS_missionConfig_restartHours',[]]) isEqualTo [])) && (!((_QS_productVersion select 6) isEqualTo 'Linux')));
+_QS_module_restart = ((!((missionNamespace getVariable ['QS_missionConfig_restartHours',[]]) isEqualTo [])) && (!((_QS_productVersion # 6) isEqualTo 'Linux')));
 missionNamespace setVariable ['QS_debugCanRestart',TRUE,FALSE];
 _QS_module_restart_isRestarting = FALSE;
 if (_QS_module_restart) then {
@@ -1146,7 +1172,7 @@ if (_QS_module_restart) then {
 	diag_log format ['***** RESTART SCHEDULE * %1 *****',_QS_module_restart_realTimeStart];	
 	_QS_module_restart_realTimeStart = (_QS_module_restart_realTimeStart select [2,3]);
 	_QS_module_restart_realTimeNow = _QS_module_restart_realTimeStart;
-	_QS_module_restart_hourCurrent = _QS_module_restart_realTimeNow select 2;
+	_QS_module_restart_hourCurrent = _QS_module_restart_realTimeNow # 2;
 	_QS_module_restart_delay = 30;
 	_QS_module_restart_checkDelay = _timeNow + _QS_module_restart_delay;
 	private _QS_module_restart_hours = missionNamespace getVariable ['QS_missionConfig_restartHours',[0,12,18]];
@@ -1154,21 +1180,21 @@ if (_QS_module_restart) then {
 	_QS_module_restart_hour = -1;
 	{
 		_restart_hour_test = _x;
-		if ((_QS_module_restart_realTimeStart select 1) < _restart_hour_test) exitWith {
+		if ((_QS_module_restart_realTimeStart # 1) < _restart_hour_test) exitWith {
 			_QS_module_restart_hour = _restart_hour_test;
 		};
 		if (_forEachIndex isEqualTo ((count _QS_module_restart_hours) - 1)) then {
-			_QS_module_restart_hour = _QS_module_restart_hours select 0;
+			_QS_module_restart_hour = _QS_module_restart_hours # 0;
 		};
 	} forEach _QS_module_restart_hours;
 	if (_QS_module_restart_hour isEqualTo -1) then {
-		_QS_module_restart_hour = _QS_module_restart_hours select 0;
+		_QS_module_restart_hour = _QS_module_restart_hours # 0;
 	};
 	_estimatedTimeLeft = 0;
-	if (_QS_module_restart_hour < (_QS_module_restart_realTimeStart select 1)) then {
-		_estimatedTimeLeft = (24 - (_QS_module_restart_realTimeStart select 1)) + _QS_module_restart_hour - ((_QS_module_restart_realTimeStart select 2) / 60);
+	if (_QS_module_restart_hour < (_QS_module_restart_realTimeStart # 1)) then {
+		_estimatedTimeLeft = (24 - (_QS_module_restart_realTimeStart # 1)) + _QS_module_restart_hour - ((_QS_module_restart_realTimeStart # 2) / 60);
 	} else {
-		_estimatedTimeLeft = (_QS_module_restart_hour - (_QS_module_restart_realTimeStart select 1)) - ((_QS_module_restart_realTimeStart select 2) / 60);
+		_estimatedTimeLeft = (_QS_module_restart_hour - (_QS_module_restart_realTimeStart # 1)) - ((_QS_module_restart_realTimeStart # 2) / 60);
 	};
 	_estimatedTimeLeft = _estimatedTimeLeft * 3600;
 	diag_log format ['Estimated Time Left: %1',_estimatedTimeLeft];
@@ -1180,14 +1206,14 @@ if (_QS_module_restart) then {
 			['playSound','QS_restart'] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
 		};
 		uiSleep 25;
-		private _text = 'Server restarting!';
+		_text = 'Server restarting!';
 		['System',['',_text]] remoteExec ['QS_fnc_showNotification',-2,FALSE];
 		_text = format ["<t size='3'>Server restarting!<br/> Server name: %1</t>",serverName];
 		[63,[5,[_text,'PLAIN DOWN',5,TRUE,TRUE]]] remoteExec ['QS_fnc_remoteExec',-2,FALSE];
 		private _leaderboards = missionNamespace getVariable 'QS_leaderboards';
-		_transportLeaderboards = (_leaderboards select 1) select {((_x select 0) > 1)};
+		_transportLeaderboards = (_leaderboards # 1) select {((_x # 0) > 1)};
 		_leaderboards set [1,_transportLeaderboards];
-		_medicLeaderboards = (_leaderboards select 2) select {((_x select 0) > 1)};
+		_medicLeaderboards = (_leaderboards # 2) select {((_x # 0) > 1)};
 		_leaderboards set [2,_medicLeaderboards];
 		profileNamespace setVariable ['QS_leaderboards',_leaderboards];
 		{
@@ -1198,7 +1224,7 @@ if (_QS_module_restart) then {
 			saveProfileNamespace;
 		};
 		uiSleep 1;
-		([] call (uiNamespace getVariable 'QS_fnc_serverCommandPassword')) serverCommand '#restartserver';
+		(call (uiNamespace getVariable 'QS_fnc_serverCommandPassword')) serverCommand '#restartserver';
 	};
 	diag_log format ['***** Restart schedule * Restart Hour: %1 RealTimeStart: %2 *****',_QS_module_restart_hour,_QS_module_restart_realTimeStart];
 	if (_QS_module_restart_hour isEqualTo -1) then {
@@ -1244,6 +1270,7 @@ _fn_gridPrepare = missionNamespace getVariable 'QS_fnc_gridPrepare';
 _fn_aoMinefield = missionNamespace getVariable 'QS_fnc_aoMinefield';
 _fn_createMinefield = missionNamespace getVariable 'QS_fnc_createMinefield';
 _fn_gpsJammer = missionNamespace getVariable 'QS_fnc_gpsJammer';
+_fn_fobAssets = missionNamespace getVariable 'QS_fnc_fobAssets';
 
 /*/============================================================================= LOOP/*/
 for '_x' from 0 to 1 step 0 do {
@@ -1320,20 +1347,20 @@ for '_x' from 0 to 1 step 0 do {
 								if (_mainMissionRegionListProxy isEqualTo []) then {
 									_mainMissionRegionListProxy = _regionMasterList call _fn_arrayShuffle;
 									if ((_QS_worldName isEqualTo 'Tanoa') && ((random 1) > 0.5)) then {
-										_mainMissionRegion = _mainMissionRegionListProxy select 0;
+										_mainMissionRegion = _mainMissionRegionListProxy # 0;
 									} else {
 										_mainMissionRegion = selectRandom _mainMissionRegionListProxy;
 									};
 									_mainMissionRegionIndex = _mainMissionRegionListProxy find _mainMissionRegion;
 									_mainMissionRegionListProxy deleteAt _mainMissionRegionIndex;
-									missionNamespace setVariable ['QS_activeRegion',(_mainMissionRegion select 0),_false];
+									missionNamespace setVariable ['QS_activeRegion',(_mainMissionRegion # 0),_false];
 								} else {
 									_mainMissionRegion = selectRandom _mainMissionRegionListProxy;
 									_mainMissionRegionIndex = _mainMissionRegionListProxy find _mainMissionRegion;
 									_mainMissionRegionListProxy deleteAt _mainMissionRegionIndex;
-									missionNamespace setVariable ['QS_activeRegion',(_mainMissionRegion select 0),_false];								
+									missionNamespace setVariable ['QS_activeRegion',(_mainMissionRegion # 0),_false];								
 								};
-								_mainMissionRegion_aoList = (_mainMissionRegion select 1) call _fn_arrayShuffle;
+								_mainMissionRegion_aoList = (_mainMissionRegion # 1) call _fn_arrayShuffle;
 								for '_x' from 0 to (round(((count _mainMissionRegion_aoList) * 0.75) - 1)) step 1 do {
 									_ao = selectRandom _mainMissionRegion_aoList;
 									_aoList pushBack _ao;
@@ -1349,7 +1376,7 @@ for '_x' from 0 to 1 step 0 do {
 							_defendAOActive = _false;		
 							_QS_ao_EFB = _false;
 							_aoGraceTime = _timeNow + 60;
-							_QS_AOpos = _ao select 1;
+							_QS_AOpos = _ao # 1;
 							missionNamespace setVariable ['QS_AOpos',_QS_AOpos,_true];
 							if ((missionNamespace getVariable 'QS_aoHQ') isEqualType []) then {
 								if (!((missionNamespace getVariable 'QS_aoHQ') isEqualTo [])) then {
@@ -1395,10 +1422,13 @@ for '_x' from 0 to 1 step 0 do {
 											_index = selectRandomWeighted [0,0.15,1,0.15,2,0.15,3,0.15,4,0.15];
 										};
 										if (_QS_worldName isEqualTo 'Malden') then {
-											_index = 0;
+											_index = selectRandomWeighted [0,0.5,1,0.5,2];
 										};
-										_mainMissionRegion = _scMasterList select _index;
-										if (!((_mainMissionRegion select 0) isEqualTo (missionNamespace getVariable 'QS_activeRegion'))) then {
+										if (_QS_worldName isEqualTo 'Enoch') then {
+											_index = selectRandomWeighted [0,0.5,1,0.25,2,0.25];
+										};
+										_mainMissionRegion = _scMasterList # _index;
+										if (!((_mainMissionRegion # 0) isEqualTo (missionNamespace getVariable 'QS_activeRegion'))) then {
 											{
 												missionNamespace setVariable _x;
 											} forEach [
@@ -1407,19 +1437,8 @@ for '_x' from 0 to 1 step 0 do {
 												['QS_virtualSectors_lastReferencePosition',[-1000,-1000,0],_false],
 												['QS_virtualSectors_regionUsedCentroids',[[-1000,-1000,0]],_false]
 											];
-										} else {
-											if (_QS_worldName isEqualTo 'Malden') then {
-												{
-													missionNamespace setVariable _x;
-												} forEach [
-													['QS_virtualSectors_regionUsedPositions',[[-1000,-1000,0]],_false],
-													['QS_virtualSectors_regionUsedRefPositions',[[-1000,-1000,0]],_false],
-													['QS_virtualSectors_lastReferencePosition',[-1000,-1000,0],_false],
-													['QS_virtualSectors_regionUsedCentroids',[[-1000,-1000,0]],_false]
-												];
-											};
 										};
-										missionNamespace setVariable ['QS_activeRegion',(_mainMissionRegion select 0),_false];
+										missionNamespace setVariable ['QS_activeRegion',(_mainMissionRegion # 0),_false];
 										_scAOCount = 5;
 										if (_QS_worldName isEqualTo 'Tanoa') then {
 											if (_index isEqualTo 0) then {
@@ -1454,7 +1473,21 @@ for '_x' from 0 to 1 step 0 do {
 										};
 										if (_QS_worldName isEqualTo 'Malden') then {
 											if (_index isEqualTo 0) then {
-												_scAOCount = 8;
+												_scAOCount = selectRandom [3,4];
+											};
+											if (_index isEqualTo 1) then {
+												_scAOCount = selectRandom [3,4];
+											};
+										};
+										if (_QS_worldName isEqualTo 'Enoch') then {
+											if (_index isEqualTo 0) then {
+												_scAOCount = selectRandom [3,4];
+											};
+											if (_index isEqualTo 1) then {
+												_scAOCount = selectRandom [5,6];
+											};
+											if (_index isEqualTo 2) then {
+												_scAOCount = selectRandom [5,6];
 											};
 										};
 									};
@@ -1474,7 +1507,7 @@ for '_x' from 0 to 1 step 0 do {
 										_scAOCount = _scAOCount - 1;
 										_mainMissionActive = _true;
 										diag_log '***** SC INIT * 0 *****';
-										_scAreaPolygon = _mainMissionRegion select 2;
+										_scAreaPolygon = _mainMissionRegion # 2;
 										_scTimeStart = diag_tickTime;
 										if (!isNil {missionNamespace getVariable 'aoHQ'}) then {
 											if ((missionNamespace getVariable 'aoHQ') isEqualType []) then {
@@ -1572,8 +1605,8 @@ for '_x' from 0 to 1 step 0 do {
 					if (([0] call (missionNamespace getVariable 'QS_fnc_aoSubObjectives')) || {(missionNamespace getVariable 'QS_aoCycleVar')}) then {
 						diag_log 'Main AO deactivating';
 						_mainMissionActive = _false;						
-						missionNamespace setVariable ['QS_classic_AI_triggerDeinit',_true,([_false,((missionNamespace getVariable 'QS_headlessClients') select 0)] select (missionNamespace getVariable 'QS_HC_Active'))];
-						missionNamespace setVariable ['QS_classic_AI_active',_false,([_false,((missionNamespace getVariable 'QS_headlessClients') select 0)] select (missionNamespace getVariable 'QS_HC_Active'))];
+						missionNamespace setVariable ['QS_classic_AI_triggerDeinit',_true,([_false,((missionNamespace getVariable 'QS_headlessClients') # 0)] select (missionNamespace getVariable 'QS_HC_Active'))];
+						missionNamespace setVariable ['QS_classic_AI_active',_false,([_false,((missionNamespace getVariable 'QS_headlessClients') # 0)] select (missionNamespace getVariable 'QS_HC_Active'))];
 						if (missionNamespace getVariable 'QS_aoCycleVar') then {
 							missionNamespace setVariable ['QS_aoCycleVar',_false,_false];
 						};
@@ -1590,7 +1623,7 @@ for '_x' from 0 to 1 step 0 do {
 						[2,'QS_ao_jammer_1'] call _fn_gpsJammer;
 						{
 							_element = _x;
-							_arrayIndex = (missionNamespace getVariable 'QS_AI_regroupPositions') findIf {((_x select 0) isEqualTo _element)};
+							_arrayIndex = (missionNamespace getVariable 'QS_AI_regroupPositions') findIf {((_x # 0) isEqualTo _element)};
 							if (!(_arrayIndex isEqualTo -1)) then {
 								(missionNamespace getVariable 'QS_AI_regroupPositions') set [_arrayIndex,_false];
 								(missionNamespace getVariable 'QS_AI_regroupPositions') deleteAt _arrayIndex;
@@ -1728,7 +1761,7 @@ for '_x' from 0 to 1 step 0 do {
 							{
 								if (_x isEqualType []) then {
 									if (!(_x isEqualTo [])) then {
-										_array = (_x select 2) select 2;
+										_array = (_x # 2) # 2;
 										if (!isNil '_array') then {
 											if (_array isEqualType []) then {
 												if (!(_array isEqualTo [])) then {
@@ -1808,14 +1841,14 @@ for '_x' from 0 to 1 step 0 do {
 							_enemyVehicle_canReinforce = _false;
 						};
 						['DEBRIEF',_ao,_QS_AOpos] call _fn_aoBriefing;
-						if (!((_ao select 7) isEqualTo 0)) then {
+						if (!((_ao # 7) isEqualTo 0)) then {
 							_defendAO = _true;
 							_defendAOActive = _true;
 							_isDefendLocal = _true;
 							if (missionNamespace getVariable 'QS_HC_Active') then {
 								_isDefendLocal = _false;
 								missionNamespace setVariable ['QS_defendActive',_true,_true];
-								remoteExec ['QS_fnc_aoDefend',((missionNamespace getVariable 'QS_headlessClients') select 0),_false];
+								remoteExec ['QS_fnc_aoDefend',((missionNamespace getVariable 'QS_headlessClients') # 0),_false];
 							} else {
 								_defendAOScript = [] spawn _fn_aoDefend;
 							};
@@ -1963,7 +1996,7 @@ for '_x' from 0 to 1 step 0 do {
 								if (_avgPlayerCount >= 30) then {_factorIndex = 3;};
 								if (_avgPlayerCount >= 40) then {_factorIndex = 4;};
 								if (_avgPlayerCount >= 50) then {_factorIndex = 5;};
-								_resultsFactor = _resultsFactors select _factorIndex;
+								_resultsFactor = _resultsFactors # _factorIndex;
 								if (_scWinningSide isEqualTo 1) then {
 									_resultsFactor = _resultsFactor + (random (missionNamespace getVariable ['QS_virtualSectors_resultsCoef',[0.01,0.02,0.03]]));
 								} else {
@@ -2032,7 +2065,7 @@ for '_x' from 0 to 1 step 0 do {
 							};
 							{
 								_element = _x;
-								_arrayIndex = (missionNamespace getVariable 'QS_AI_regroupPositions') findIf {((_x select 0) isEqualTo _element)};
+								_arrayIndex = (missionNamespace getVariable 'QS_AI_regroupPositions') findIf {((_x # 0) isEqualTo _element)};
 								if (!(_arrayIndex isEqualTo -1)) then {
 									(missionNamespace getVariable 'QS_AI_regroupPositions') set [_arrayIndex,_false];
 									(missionNamespace getVariable 'QS_AI_regroupPositions') deleteAt _arrayIndex;
@@ -2044,7 +2077,7 @@ for '_x' from 0 to 1 step 0 do {
 							[1] call _fn_artillery;
 							_scToRemove = [];
 							{
-								_scToRemove pushBack (_x select 0);
+								_scToRemove pushBack (_x # 0);
 							} forEach (missionNamespace getVariable 'QS_virtualSectors_data');
 							{
 								['REMOVE',_x] call _fn_sc;
@@ -2067,7 +2100,7 @@ for '_x' from 0 to 1 step 0 do {
 								{
 									if (_x isEqualType []) then {
 										if (!(_x isEqualTo [])) then {
-											_array = (_x select 2) select 2;
+											_array = (_x # 2) # 2;
 											if (!isNil '_array') then {
 												if (_array isEqualType []) then {
 													if (!(_array isEqualTo [])) then {
@@ -2196,7 +2229,7 @@ for '_x' from 0 to 1 step 0 do {
 								missionNamespace setVariable ['QS_grid_AIRspDestroyed',0,_false];
 								{
 									_element = _x;
-									_arrayIndex = (missionNamespace getVariable 'QS_AI_regroupPositions') findIf {((_x select 0) isEqualTo _element)};
+									_arrayIndex = (missionNamespace getVariable 'QS_AI_regroupPositions') findIf {((_x # 0) isEqualTo _element)};
 									if (!(_arrayIndex isEqualTo -1)) then {
 										(missionNamespace getVariable 'QS_AI_regroupPositions') set [_arrayIndex,_false];
 										(missionNamespace getVariable 'QS_AI_regroupPositions') deleteAt _arrayIndex;
@@ -2332,7 +2365,7 @@ for '_x' from 0 to 1 step 0 do {
 								if (!(missionNamespace getVariable ['QS_grid_AI_triggerDeinit',_false])) then {
 									missionNamespace setVariable ['QS_grid_AI_triggerDeinit',_true,_true];
 								};
-								_arrayIndex = (missionNamespace getVariable 'QS_positions_fieldHospitals') findIf {((_x select 0) isEqualTo 'GRID_IG')};
+								_arrayIndex = (missionNamespace getVariable 'QS_positions_fieldHospitals') findIf {((_x # 0) isEqualTo 'GRID_IG')};
 								if (!(_arrayIndex isEqualTo -1)) then {
 									(missionNamespace getVariable 'QS_positions_fieldHospitals') set [_arrayIndex,_false];
 									(missionNamespace getVariable 'QS_positions_fieldHospitals') deleteAt _arrayIndex;
@@ -2358,7 +2391,7 @@ for '_x' from 0 to 1 step 0 do {
 									};
 									diag_log 'CREATING SMALL TASK';
 									_QS_module_aoSmallTasks_isActive = _true;
-									_QS_module_aoSmallTasks_list = [1,2,3];
+									_QS_module_aoSmallTasks_list = [1,2];
 									_QS_module_aoSmallTasks_current = selectRandom _QS_module_aoSmallTasks_list;
 									_QS_module_aoSmallTasks_data = [_QS_module_aoSmallTasks_current,1,[]] call _fn_aoSmallTask;
 									if (_QS_module_aoSmallTasks_data isEqualType 0) then {
@@ -2394,12 +2427,13 @@ for '_x' from 0 to 1 step 0 do {
 					diag_log '***** FOB ***** ADD TO REMAINS COLLECTOR *****';
 					_module_fob_fob = [0,_module_fob_fob] call _fn_fobPrepare;
 					_module_fob_isFobActive = _false;
+					_trigger_delete_fobVehicles = _true;
 				};
 				if (!(_module_fob_activeRegion isEqualTo -1)) then {
 					diag_log '***** FOB ***** CREATING *****';
 					_module_fob_fob = [1,_module_fob_activeRegion] call _fn_fobPrepare;
-					_module_fob_vData = ([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 2;
-					_module_fob_location = ([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 0;
+					_module_fob_vData = ([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 2;
+					_module_fob_location = ([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 0;
 					missionNamespace setVariable ['QS_module_fob_centerPosition',_module_fob_location,_false];
 					_module_fob_assault_timer = _timeNow + 900 + 300 - (random 600);
 					_module_fob_logistics_complete = _false;
@@ -2412,7 +2446,7 @@ for '_x' from 0 to 1 step 0 do {
 					_module_fob_logistics_fuelServices = _false;
 					_module_fob_isFobActive = _true;
 					/*/ Communicate with players /*/
-					['FOB_INIT',['',(format ['Secure FOB %1',(([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 5)])]] remoteExec ['QS_fnc_showNotification',-2,_false];
+					['FOB_INIT',['',(format ['Secure FOB %1',(([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 5)])]] remoteExec ['QS_fnc_showNotification',-2,_false];
 				};
 			} else {
 				//comment 'RELEVANT FOB IS ALREADY CREATED, MANAGE IT HERE';
@@ -2437,12 +2471,12 @@ for '_x' from 0 to 1 step 0 do {
 											_x setVariable ['QS_vehicle_isSuppliedFOB',_true,_true];
 											0 = ['sideChat',[_west,'HQ'],(format ['FOB Respawn Tickets added: %1 total tickets: %2',_module_fob_respawn_ticketsAdded,(missionNamespace getVariable 'QS_module_fob_respawnTickets')])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 											if (!isNil {_x getVariable 'QS_transporter'}) then {
-												if (alive ((_x getVariable 'QS_transporter') select 1)) then {
-													0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') select 2),((_x getVariable 'QS_transporter') select 0),4];
+												if (alive ((_x getVariable 'QS_transporter') # 1)) then {
+													0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') # 2),((_x getVariable 'QS_transporter') # 0),4];
 												};
 												if (!(_supportMessagePopped)) then {
 													_supportMessagePopped = _true;
-													['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') select 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
+													['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') # 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 												};
 											};
 										};
@@ -2467,14 +2501,14 @@ for '_x' from 0 to 1 step 0 do {
 										_x setVariable ['QS_vehicle_isSuppliedFOB',_true,_true];
 										0 = ['sideChat',[_west,'HQ'],(format ['FOB Respawn Tickets added: %1 total tickets: %2',_module_fob_respawn_ticketsAdded,(missionNamespace getVariable 'QS_module_fob_respawnTickets')])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 										if (!isNil {_x getVariable 'QS_transporter'}) then {
-											if (alive ((_x getVariable 'QS_transporter') select 1)) then {
+											if (alive ((_x getVariable 'QS_transporter') # 1)) then {
 												if ((missionNamespace getVariable 'QS_module_fob_respawnTickets') <= 24) then {
-													0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') select 2),((_x getVariable 'QS_transporter') select 0),4];
+													0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') # 2),((_x getVariable 'QS_transporter') # 0),4];
 												};
 											};
 											if (!(_supportMessagePopped)) then {
 												_supportMessagePopped = _true;
-												['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') select 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
+												['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') # 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 											};
 										};
 									};
@@ -2490,10 +2524,12 @@ for '_x' from 0 to 1 step 0 do {
 								if ((isNull (attachedTo _x)) && (isNull (ropeAttachedTo _x))) then {
 									if (!(_module_fob_logistics_vehicleRespawnEnabled)) then {
 										_module_fob_logistics_vehicleRespawnEnabled = _true;
+										_vRespawn_checkDelay = -1;
+										['VEHICLES_ADD',_module_fob_activeRegion] call _fn_fobAssets;
 										missionNamespace setVariable ['QS_module_fob_vehicleRespawnEnabled',_module_fob_logistics_vehicleRespawnEnabled,_true];
 										0 = ['FOB_UPDATE',['','Vehicle Respawn online']] remoteExec ['QS_fnc_showNotification',-2,_false];
-										if (alive ((_x getVariable 'QS_transporter') select 1)) then {
-											0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') select 2),((_x getVariable 'QS_transporter') select 0),4];
+										if (alive ((_x getVariable 'QS_transporter') # 1)) then {
+											0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') # 2),((_x getVariable 'QS_transporter') # 0),4];
 										};
 									};
 								};
@@ -2511,10 +2547,11 @@ for '_x' from 0 to 1 step 0 do {
 										_module_fob_logistics_fuelServices = _true;
 										missionNamespace setVariable ['QS_module_fob_services_repair',_module_fob_logistics_repairServices,_true];
 										missionNamespace setVariable ['QS_module_fob_services_fuel',_module_fob_logistics_fuelServices,_true];
-										'QS_marker_veh_fieldservice_04' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 3);
-										'QS_marker_veh_fieldservice_01' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 4);
+										'QS_marker_veh_fieldservice_04' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 3);
+										'QS_marker_veh_fieldservice_01' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 4);
 										'QS_marker_veh_fieldservice_04' setMarkerAlpha 0.5;
 										'QS_marker_veh_fieldservice_01' setMarkerAlpha 0.5;
+										(missionNamespace getVariable 'QS_module_fob_repairDepot') hideObjectGlobal FALSE;
 										0 = ['FOB_UPDATE',['','Vehicle Service online']] remoteExec ['QS_fnc_showNotification',-2,_false];
 									};
 								};
@@ -2535,39 +2572,19 @@ for '_x' from 0 to 1 step 0 do {
 										if (!(_module_fob_logistics_ammoServices)) then {
 											_module_fob_logistics_ammoServices = _true;
 											missionNamespace setVariable ['QS_module_fob_services_ammo',_module_fob_logistics_ammoServices,_true];
-											if (isNull (missionNamespace getVariable 'QS_module_fob_supplycrate')) then {
-												missionNamespace setVariable [
-													'QS_module_fob_supplycrate',
-													(createVehicle ['B_supplyCrate_F',[0,0,0],[],0,'NONE']),
-													_false
-												];
-												missionNamespace setVariable [
-													'QS_analytics_entities_created',
-													((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
-													_false
-												];
-												(missionNamespace getVariable 'QS_module_fob_supplycrate') allowDamage _false;
-												(missionNamespace getVariable 'QS_module_fob_supplycrate') attachTo [(missionNamespace getVariable 'QS_module_fob_HQ'),[5,0,-2.35]];
-												sleep 0.25;
-												detach (missionNamespace getVariable 'QS_module_fob_supplycrate');
-												(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_vehicle_isSuppliedFOB',_true,_false];
-												(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_curator_disableEditability',_true,_false];
-												(missionNamespace getVariable 'QS_module_fob_supplycrate') enableRopeAttach _false;
-												(missionNamespace getVariable 'QS_module_fob_supplycrate') enableVehicleCargo _false;
-												(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_arsenal_object',_true,_true];
-											};
-											'QS_marker_veh_fieldservice_04' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 3);
-											'QS_marker_veh_fieldservice_01' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 4);
+											(missionNamespace getVariable 'QS_module_fob_supplycrate') hideObjectGlobal FALSE;
+											'QS_marker_veh_fieldservice_04' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 3);
+											'QS_marker_veh_fieldservice_01' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 4);
 											'QS_marker_veh_fieldservice_04' setMarkerAlpha 0.5;
 											'QS_marker_veh_fieldservice_01' setMarkerAlpha 0.5;
 											0 = ['FOB_UPDATE',['','Rearm Service online']] remoteExec ['QS_fnc_showNotification',-2,_false];
 											if (!isNil {_x getVariable 'QS_transporter'}) then {
-												if (alive ((_x getVariable 'QS_transporter') select 1)) then {
-													0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') select 2),((_x getVariable 'QS_transporter') select 0),4];
+												if (alive ((_x getVariable 'QS_transporter') # 1)) then {
+													0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') # 2),((_x getVariable 'QS_transporter') # 0),4];
 												};
 												if (!(_supportMessagePopped)) then {
 													_supportMessagePopped = _true;
-													['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') select 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
+													['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') # 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 												};
 											};
 										};
@@ -2576,32 +2593,14 @@ for '_x' from 0 to 1 step 0 do {
 							} else {
 								if ((isNull (attachedTo _x)) && (isNull (ropeAttachedTo _x))) then {
 									if (isNil {_x getVariable 'QS_vehicle_isSuppliedFOB'}) then {
-										if (isNull (missionNamespace getVariable 'QS_module_fob_supplycrate')) then {
-											missionNamespace setVariable [
-												'QS_module_fob_supplycrate',
-												(createVehicle ['B_supplyCrate_F',[0,0,0],[],0,'NONE']),
-												_false
-											];
-											missionNamespace setVariable [
-												'QS_analytics_entities_created',
-												((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
-												_false
-											];
-											(missionNamespace getVariable 'QS_module_fob_supplycrate') allowDamage _false;
-											(missionNamespace getVariable 'QS_module_fob_supplycrate') attachTo [(missionNamespace getVariable 'QS_module_fob_HQ'),[5,0,-2.35]];
-											sleep 0.25;
-											detach (missionNamespace getVariable 'QS_module_fob_supplycrate');
-											(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_vehicle_isSuppliedFOB',_true,_false];
-											(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_curator_disableEditability',_true,_false];
-											(missionNamespace getVariable 'QS_module_fob_supplycrate') enableRopeAttach _false;
-											(missionNamespace getVariable 'QS_module_fob_supplycrate') enableVehicleCargo _false;
-											(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_arsenal_object',_true,_true];
-										};
+										(missionNamespace getVariable 'QS_module_fob_supplycrate') hideObjectGlobal FALSE;
 										if ((['box',(typeOf _x),_false] call _fn_inString) || {(['mover',(typeOf _x),_false] call _fn_inString)}) exitWith {
 											if ((getMass _x) > 5000) then {
 												if ((isNull (attachedTo _x)) && (isNull (ropeAttachedTo _x))) then {
 													if (!(_module_fob_logistics_vehicleRespawnEnabled)) then {
 														_module_fob_logistics_vehicleRespawnEnabled = _true;
+														_vRespawn_checkDelay = -1;
+														['VEHICLES_ADD',_module_fob_activeRegion] call _fn_fobAssets;
 														missionNamespace setVariable ['QS_module_fob_vehicleRespawnEnabled',_module_fob_logistics_vehicleRespawnEnabled,_true];
 														0 = ['FOB_UPDATE',['','Vehicle Respawn online']] remoteExec ['QS_fnc_showNotification',-2,_false];
 													};
@@ -2611,15 +2610,14 @@ for '_x' from 0 to 1 step 0 do {
 
 										_x setVariable ['QS_vehicle_isSuppliedFOB',_true,_true];
 										if (!isNil {_x getVariable 'QS_transporter'}) then {
-											if (alive ((_x getVariable 'QS_transporter') select 1)) then {
-												0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') select 2),((_x getVariable 'QS_transporter') select 0),4];
+											if (alive ((_x getVariable 'QS_transporter') # 1)) then {
+												0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') # 2),((_x getVariable 'QS_transporter') # 0),4];
 											};
 											if (!(_supportMessagePopped)) then {
 												_supportMessagePopped = _true;
-												0 = ['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') select 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
+												0 = ['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') # 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 											};
 										};
-										/*/[_x,(missionNamespace getVariable 'QS_module_fob_supplycrate'),_true] call (missionNamespace getVariable 'QS_fnc_boxTransferCargo');/*/
 									};
 								};
 							};
@@ -2635,38 +2633,17 @@ for '_x' from 0 to 1 step 0 do {
 											missionNamespace setVariable ['QS_module_fob_services_ammo',_true,_true];
 										};
 									};
-									if (isNull (missionNamespace getVariable 'QS_module_fob_supplycrate')) then {
-										missionNamespace setVariable [
-											'QS_module_fob_supplycrate',
-											(createVehicle ['B_supplyCrate_F',[0,0,0],[],0,'NONE']),
-											_false
-										];
-										missionNamespace setVariable [
-											'QS_analytics_entities_created',
-											((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
-											_false
-										];
-										(missionNamespace getVariable 'QS_module_fob_supplycrate') allowDamage _false;
-										(missionNamespace getVariable 'QS_module_fob_supplycrate') attachTo [(missionNamespace getVariable 'QS_module_fob_HQ'),[5,0,-2.35]];
-										sleep 0.25;
-										detach (missionNamespace getVariable 'QS_module_fob_supplycrate');
-										(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_vehicle_isSuppliedFOB',_true,_false];
-										(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_curator_disableEditability',_true,_false];
-										(missionNamespace getVariable 'QS_module_fob_supplycrate') enableRopeAttach _false;
-										(missionNamespace getVariable 'QS_module_fob_supplycrate') enableVehicleCargo _false;
-										(missionNamespace getVariable 'QS_module_fob_supplycrate') setVariable ['QS_arsenal_object',_true,_true];
-									};
+									(missionNamespace getVariable 'QS_module_fob_supplycrate') hideObjectGlobal FALSE;
 									_x setVariable ['QS_vehicle_isSuppliedFOB',_true,_true];
 									if (!isNil {_x getVariable 'QS_transporter'}) then {
-										if (alive ((_x getVariable 'QS_transporter') select 1)) then {
-											/*/0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') select 2),((_x getVariable 'QS_transporter') select 0),4];/*/
+										if (alive ((_x getVariable 'QS_transporter') # 1)) then {
+										
 										};
 										if (!(_supportMessagePopped)) then {
 											_supportMessagePopped = _true;
-											0 = ['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') select 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
+											0 = ['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') # 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 										};
 									};
-									/*/[_x,(missionNamespace getVariable 'QS_module_fob_supplycrate'),_false] call (missionNamespace getVariable 'QS_fnc_boxTransferCargo');/*/
 								};
 							};
 						};
@@ -2681,18 +2658,19 @@ for '_x' from 0 to 1 step 0 do {
 									_module_fob_logistics_fuelServices = _true;
 									missionNamespace setVariable ['QS_module_fob_services_repair',_module_fob_logistics_repairServices,_true];
 									missionNamespace setVariable ['QS_module_fob_services_fuel',_module_fob_logistics_fuelServices,_true];
-									'QS_marker_veh_fieldservice_04' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 3);
-									'QS_marker_veh_fieldservice_01' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) select 4);
+									'QS_marker_veh_fieldservice_04' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 3);
+									'QS_marker_veh_fieldservice_01' setMarkerPos (([_module_fob_activeRegion] call (missionNamespace getVariable 'QS_data_fobs')) # 4);
 									'QS_marker_veh_fieldservice_04' setMarkerAlpha 0.5;
 									'QS_marker_veh_fieldservice_01' setMarkerAlpha 0.5;
+									(missionNamespace getVariable 'QS_module_fob_repairDepot') hideObjectGlobal FALSE;
 									0 = ['FOB_UPDATE',['','Vehicle Service online']] remoteExec ['QS_fnc_showNotification',-2,_false];
 									if (!isNil {_x getVariable 'QS_transporter'}) then {
-										if (alive ((_x getVariable 'QS_transporter') select 1)) then {
-											0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') select 2),((_x getVariable 'QS_transporter') select 0),4];
+										if (alive ((_x getVariable 'QS_transporter') # 1)) then {
+											0 = (missionNamespace getVariable 'QS_leaderboards_session_queue') pushBack ['TRANSPORT',((_x getVariable 'QS_transporter') # 2),((_x getVariable 'QS_transporter') # 0),4];
 										};
 										if (!(_supportMessagePopped)) then {
 											_supportMessagePopped = _true;
-											['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') select 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
+											['sideChat',[_west,'BLU'],(format ['%1 supported the FOB with a(n) %2',((_x getVariable 'QS_transporter') # 0),(getText (configFile >> 'CfgVehicles' >> (typeOf _x) >> 'displayName'))])] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 										};
 									};
 								};
@@ -2872,7 +2850,7 @@ for '_x' from 0 to 1 step 0 do {
 									missionNamespace setVariable ['QS_forceSideMission',_false,_false];
 								};
 								_sideMissionActive = _true;
-								_sideMission = (_sideMissionListProxy select 0) selectRandomWeighted (_sideMissionListProxy select 1);
+								_sideMission = (_sideMissionListProxy # 0) selectRandomWeighted (_sideMissionListProxy # 1);
 								_currentSideMission = [] spawn (missionNamespace getVariable _sideMission);
 							};
 						};
@@ -2895,37 +2873,20 @@ for '_x' from 0 to 1 step 0 do {
 
 	if (_QS_module_cas_respawn) then {
 		if (_timeNow > _QS_module_cas_respawn_checkDelay) then {
-			if (!isNull (missionNamespace getVariable ['QS_fighterPilot',objNull])) then {
-				if (alive (missionNamespace getVariable 'QS_fighterPilot')) then {
-					_casJetObj = missionNamespace getVariable ['QS_casJet',objNull];
-					if ((!(canMove _casJetObj)) && ((fuel _casJetObj) isEqualTo 0) && (((getPosATL _casJetObj) select 2) < 10) && ((crew _casJetObj) isEqualTo [])) then {
-						_casJetObj setDamage [1,_false];
-						deleteVehicle _casJetObj;
-						missionNamespace setVariable [
-							'QS_analytics_entities_deleted',
-							((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-							_false
-						];
-					};
-					if (!alive _casJetObj) then {
+			if (missionNamespace getVariable ['QS_CAS_jetAllowance_gameover',_false]) then {
+				if (!isNull (missionNamespace getVariable ['QS_fighterPilot',objNull])) then {
+					if (alive (missionNamespace getVariable 'QS_fighterPilot')) then {
 						_casUID = getPlayerUID (missionNamespace getVariable 'QS_fighterPilot');
 						if (!(_casUID isEqualTo '')) then {
-							_casAllowanceIndex = (missionNamespace getVariable 'QS_CAS_jetAllowance') findIf {((_x select 0) isEqualTo _casUID)};
-							if (!(_casAllowanceIndex isEqualTo -1)) then {
-								_casAllowancePool = ((missionNamespace getVariable 'QS_CAS_jetAllowance') select _casAllowanceIndex) select 1;
-								if (_casAllowancePool > 3) exitWith {
-									_casPilot = missionNamespace getVariable ['QS_fighterPilot',objNull];
-									if (isPlayer _casPilot) then {
-										if (_casPilot getUnitTrait 'QS_trait_fighterPilot') then {
-											[
-												[],
-												{
-													if (player getUnitTrait 'QS_trait_fighterPilot') then {
-														endMission 'QS_RD_end_7';
-													};
-												}
-											] remoteExec ['call',_casPilot,_false];
-										};
+							_casPilot = missionNamespace getVariable ['QS_fighterPilot',objNull];
+							if (isPlayer _casPilot) then {
+								if (_casPilot getUnitTrait 'QS_trait_fighterPilot') then {
+									missionNamespace setVariable ['QS_CAS_jetAllowance_gameover',_false,_false];
+									['HANDLE',['HANDLE_REQUEST_ROLE','',(_casPilot getVariable ['QS_unit_side',WEST]),'rifleman',_casPilot]] call (missionNamespace getVariable 'QS_fnc_roles');
+									_casPilot spawn {
+										moveOut _this;
+										uiSleep 0.5;
+										remoteExec ['QS_fnc_clientEventRespawn',_this,FALSE];
 									};
 								};
 							};
@@ -2933,7 +2894,15 @@ for '_x' from 0 to 1 step 0 do {
 					};
 				};
 			};
-			_QS_module_cas_respawn_checkDelay = _timeNow + 30;
+			_casJetObj = missionNamespace getVariable ['QS_casJet',objNull];
+			if (alive _casJetObj) then {
+				if ((!(canMove _casJetObj)) && {((fuel _casJetObj) isEqualTo 0)} && {(((getPosATL _casJetObj) # 2) < 10)} && {((crew _casJetObj) isEqualTo [])}) then {
+					_casJetObj setDamage [1,_false];
+					deleteVehicle _casJetObj;
+					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+				};
+			};
+			_QS_module_cas_respawn_checkDelay = _timeNow + 15;
 		};
 	};
 	
@@ -3044,15 +3013,19 @@ for '_x' from 0 to 1 step 0 do {
 					};
 				} forEach _HVT_laserTargets;
 			};
-			_HVT_checkDelay = _timeNow + 90;		//DEBUG, set to 90
+			_HVT_checkDelay = _timeNow + 90;
 		};
 	};
 	
 	if (_timeNow > _vRespawn_checkDelay) then {
 		if (!((missionNamespace getVariable 'QS_v_Monitor') isEqualTo [])) then {
+			if (_trigger_delete_fobVehicles) then {
+				_trigger_delete_fobVehicles = _false;
+				['VEHICLES_REMOVE'] call _fn_fobAssets;
+			};
 			{
 				if (_x isEqualType []) then {
-					_array = (missionNamespace getVariable 'QS_v_Monitor') select _forEachIndex;
+					_array = (missionNamespace getVariable 'QS_v_Monitor') # _forEachIndex;
 					_array params [
 						'_v',
 						'_vdelay',
@@ -3089,8 +3062,8 @@ for '_x' from 0 to 1 step 0 do {
 									deleteVehicle _v;
 									sleep 0.1;
 								};
-								if (_fobVehicleID in [-1,-2]) then {
-									if ([_vpos,_nearEntitiesCheck] call _fn_isPosSafe) then {
+								if (_fobVehicleID in [-1,-2,9]) then {
+									if ((_nearEntitiesCheck isEqualTo -1) || {([_vpos,_nearEntitiesCheck] call _fn_isPosSafe)}) then {
 										if (!(_vRespawnTickets isEqualTo -1)) then {
 											if (_vRespawnTickets isEqualTo 0) then {
 												(missionNamespace getVariable 'QS_v_Monitor') set [_forEachIndex,_false];
@@ -3115,8 +3088,9 @@ for '_x' from 0 to 1 step 0 do {
 													_v setPosASL _vpos;
 												} else {
 													_v setVectorUp (surfaceNormal _vpos);
-													if ((toLower _t) in ['b_truck_01_mover_f','b_truck_01_ammo_f','b_truck_01_box_f','b_truck_01_fuel_f','b_truck_01_medical_f','b_truck_01_repair_f','b_truck_01_transport_f','b_truck_01_covered_f','b_t_truck_01_mover_f','b_t_truck_01_ammo_f','b_t_truck_01_box_f','b_t_truck_01_fuel_f','b_t_truck_01_medical_f','b_t_truck_01_repair_f','b_t_truck_01_transport_f','b_t_truck_01_covered_f']) then {
-														_v setPosASL (AGLToASL [_vpos select 0,_vpos select 1,((_vpos select 2) + 0.7)]);
+													if (_v isKindOf 'truck_01_base_f') then {
+													//if ((toLower _t) in ['b_truck_01_mover_f','b_truck_01_ammo_f','b_truck_01_box_f','b_truck_01_fuel_f','b_truck_01_medical_f','b_truck_01_repair_f','b_truck_01_transport_f','b_truck_01_covered_f','b_t_truck_01_mover_f','b_t_truck_01_ammo_f','b_t_truck_01_box_f','b_t_truck_01_fuel_f','b_t_truck_01_medical_f','b_t_truck_01_repair_f','b_t_truck_01_transport_f','b_t_truck_01_covered_f','b_truck_01_cargo_f','b_truck_01_flatbed_f','b_t_truck_01_cargo_f','b_t_truck_01_flatbed_f']) then {
+														_v setPosASL (AGLToASL [_vpos # 0,_vpos # 1,((_vpos # 2) + 0.7)]);
 													} else {
 														_v setPosASL (AGLToASL _vpos);
 													};
@@ -3131,7 +3105,7 @@ for '_x' from 0 to 1 step 0 do {
 												_v setDir _dir;
 												if (_isCarrierVehicle isEqualTo 0) then {
 													_v setVectorUp (surfaceNormal _vpos);
-													_v setPos [(_vpos select 0),(_vpos select 1),((_vpos select 2)+0.1)];
+													_v setPos [(_vpos # 0),(_vpos # 1),((_vpos # 2)+0.1)];
 												} else {
 													if (_isCarrierVehicle isEqualTo 1) then {
 														_v setPosWorld _vpos;
@@ -3161,14 +3135,15 @@ for '_x' from 0 to 1 step 0 do {
 										};
 									};
 								} else {
+								
 									if (_module_fob_isFobActive) then {
 										if (_module_fob_logistics_vehicleRespawnEnabled) then {
 											if (!(_module_fob_vData isEqualTo [])) then {
-												_module_fob_vData_v = _module_fob_vData select _fobVehicleID;
-												if (!(_vpos isEqualTo (_module_fob_vData_v select 1))) then {
+												_module_fob_vData_v = _module_fob_vData # _fobVehicleID;
+												if (!(_vpos isEqualTo (_module_fob_vData_v # 1))) then {
 													_module_fob_vData_v params ['_t','_vpos','_dir'];
 												};
-												if ([_vpos,_nearEntitiesCheck] call _fn_isPosSafe) then {
+												if ((_nearEntitiesCheck isEqualTo -1) || {([_vpos,_nearEntitiesCheck] call _fn_isPosSafe)}) then {
 													missionNamespace setVariable ['QS_vehicleRespawnCount',((missionNamespace getVariable 'QS_vehicleRespawnCount') + 1),_false];
 													if (_isDynamicVehicle) then {
 														_v = createSimpleObject [_t,[(random -1000),(random -1000),(1000 + (random 2000))]];
@@ -3178,23 +3153,25 @@ for '_x' from 0 to 1 step 0 do {
 															_v setPosASL _vpos;
 														} else {
 															_v setVectorUp (surfaceNormal _vpos);
-															if ((toLower _t) in ['b_truck_01_mover_f','b_truck_01_ammo_f','b_truck_01_box_f','b_truck_01_fuel_f','b_truck_01_medical_f','b_truck_01_repair_f','b_truck_01_transport_f','b_truck_01_covered_f','b_t_truck_01_mover_f','b_t_truck_01_ammo_f','b_t_truck_01_box_f','b_t_truck_01_fuel_f','b_t_truck_01_medical_f','b_t_truck_01_repair_f','b_t_truck_01_transport_f','b_t_truck_01_covered_f']) then {
-																_v setPosASL (AGLToASL [_vpos select 0,_vpos select 1,((_vpos select 2) + 0.7)]);
+															if (_v isKindOf 'truck_01_base_f') then {
+															//if ((toLower _t) in ['b_truck_01_mover_f','b_truck_01_ammo_f','b_truck_01_box_f','b_truck_01_fuel_f','b_truck_01_medical_f','b_truck_01_repair_f','b_truck_01_transport_f','b_truck_01_covered_f','b_t_truck_01_mover_f','b_t_truck_01_ammo_f','b_t_truck_01_box_f','b_t_truck_01_fuel_f','b_t_truck_01_medical_f','b_t_truck_01_repair_f','b_t_truck_01_transport_f','b_t_truck_01_covered_f','b_truck_01_cargo_f','b_truck_01_flatbed_f','b_t_truck_01_cargo_f','b_t_truck_01_flatbed_f']) then {
+																_v setPosASL (AGLToASL [_vpos # 0,_vpos # 1,((_vpos # 2) + 0.7)]);
 															} else {
 																_v setPosASL (AGLToASL _vpos);
 															};
 														};
+														_v enableSimulationGlobal TRUE;
+														_v spawn {
+															sleep 1;
+															_this enableSimulationGlobal FALSE;
+														};
 													} else {
 														_v = createVehicle [_t,[(random -1000),(random -1000),(1000 + (random 2000))],[],0,'NONE'];
-														missionNamespace setVariable [
-															'QS_analytics_entities_created',
-															((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
-															_false
-														];
+														missionNamespace setVariable ['QS_analytics_entities_created',((missionNamespace getVariable 'QS_analytics_entities_created') + 1),_false];
 														_v setDir _dir;
 														if (_isCarrierVehicle isEqualTo 0) then {
 															_v setVectorUp (surfaceNormal _vpos);
-															_v setPos [(_vpos select 0),(_vpos select 1),((_vpos select 2)+0.1)];
+															_v setPos [(_vpos # 0),(_vpos # 1),((_vpos # 2)+0.1)];
 														} else {
 															if (_isCarrierVehicle isEqualTo 1) then {
 																_v setPosWorld _vpos;
@@ -3230,15 +3207,15 @@ for '_x' from 0 to 1 step 0 do {
 						};
 					} else {
 						if (_module_fob_logistics_vehicleRespawnEnabled) then {
-							if (!(_fobVehicleID in [-1,-2])) then {
+							if (!(_fobVehicleID in [-1,-2,9])) then {
 								if (_module_fob_isFobActive) then {
 									if (!(_module_fob_activeRegion in [-1,0])) then {
 										if (!(_module_fob_vData isEqualTo [])) then {
-											_module_fob_vData_v = _module_fob_vData select _fobVehicleID;
-											if (!(_vpos isEqualTo (_module_fob_vData_v select 1))) then {
-												_t = _module_fob_vData_v select 0;
-												_vpos = _module_fob_vData_v select 1;
-												_dir = _module_fob_vData_v select 2;
+											_module_fob_vData_v = _module_fob_vData # _fobVehicleID;
+											if (!(_vpos isEqualTo (_module_fob_vData_v # 1))) then {
+												_t = _module_fob_vData_v # 0;
+												_vpos = _module_fob_vData_v # 1;
+												_dir = _module_fob_vData_v # 2;
 												(missionNamespace getVariable 'QS_v_Monitor') set [_forEachIndex,[_v,_vdelay,_randomize,_configCode,_t,_vpos,_dir,_false,0,_fobVehicleID,_QS_vRespawnDist_base,_QS_vRespawnDist_field,_vRespawnTickets,_nearEntitiesCheck,_isDynamicVehicle,_isCarrierVehicle]];
 											};
 										};
@@ -3246,7 +3223,7 @@ for '_x' from 0 to 1 step 0 do {
 								};
 							};
 						};
-						if ((!isSimpleObject _v) || {(!(_fobVehicleID in [-1,-2]))}) then {
+						if ((!isSimpleObject _v) || {(!(_fobVehicleID in [-1,-2,9]))}) then {
 							if (!isSimpleObject _v) then {
 								if (!isNil {_v getVariable 'QS_ClientVTexture_owner'}) then {
 									_ownerInGame = _false;
@@ -3276,11 +3253,11 @@ for '_x' from 0 to 1 step 0 do {
 									};
 									if (((crew _v) isEqualTo []) || {(((crew _v) findIf {(alive _x)}) isEqualTo -1)}) then {
 										if (([_posCheck, ([_QS_vRespawnDist_base,_QS_vRespawnDist_field] select ((_v distance2D _vpos) >= 750)) ,[_west,_civilian],(if (_v isKindOf 'Helicopter') then [{(_allPlayers select {(_x getUnitTrait 'QS_trait_pilot')})},{_allPlayers}]),0] call _fn_serverDetector) isEqualTo []) then {
-											if ((_isDynamicVehicle) || (_v isKindOf 'Helicopter')) then {
+											if ((_isDynamicVehicle) || {(_v isKindOf 'Helicopter')}) then {
 												missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 												deleteVehicle _v;
 											} else {
-												if ([_vpos,_nearEntitiesCheck] call _fn_isPosSafe) then {
+												if ((_nearEntitiesCheck isEqualTo -1) || {([_vpos,_nearEntitiesCheck] call _fn_isPosSafe)}) then {
 													if (local _v) then {
 														_v setVectorUp (surfaceNormal _vpos);
 													} else {
@@ -3312,15 +3289,15 @@ for '_x' from 0 to 1 step 0 do {
 											};
 										};
 									};
-									if ((_posCheck select 2) < -1.5) then {
+									if ((_posCheck # 2) < -1.5) then {
 										if (!(_v isKindOf 'Ship')) then {
 											if (((crew _v) isEqualTo []) || {(((crew _v) findIf {(alive _x)}) isEqualTo -1)}) then {
 												if (([_posCheck,25,[_west,_civilian],_allPlayers,0] call _fn_serverDetector) isEqualTo []) then {
-													if ((_isDynamicVehicle) || (_v isKindOf 'Helicopter')) then {
+													if ((_isDynamicVehicle) || {(_v isKindOf 'Helicopter')}) then {
 														missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 														deleteVehicle _v;
 													} else {
-														if ([_vpos,_nearEntitiesCheck] call _fn_isPosSafe) then {
+														if ((_nearEntitiesCheck isEqualTo -1) || {([_vpos,_nearEntitiesCheck] call _fn_isPosSafe)}) then {
 															if (local _v) then {
 																_v setVectorUp (surfaceNormal _vpos);
 															} else {
@@ -3357,7 +3334,7 @@ for '_x' from 0 to 1 step 0 do {
 															if (!(_x isEqualTo 0)) then {
 																_v setHitIndex [_forEachIndex,0];
 															};
-														} forEach (_allHitPointsDamage select 2);
+														} forEach (_allHitPointsDamage # 2);
 													};
 												};
 												if (isEngineOn _v) then {
@@ -3395,11 +3372,7 @@ for '_x' from 0 to 1 step 0 do {
 				};
 				sleep 0.01;
 			} forEach (missionNamespace getVariable 'QS_v_Monitor');
-			{
-				if (_x isEqualType _true) then {
-					(missionNamespace getVariable 'QS_v_Monitor') deleteAt _forEachIndex;
-				};
-			} forEach (missionNamespace getVariable 'QS_v_Monitor');
+			missionNamespace setVariable ['QS_v_Monitor',((missionNamespace getVariable 'QS_v_Monitor') select {(_x isEqualType [])}),_false];
 		};
 		_vRespawn_checkDelay = time + _vRespawn_delay;
 	};
@@ -3477,12 +3450,16 @@ for '_x' from 0 to 1 step 0 do {
 														(((((_QS_objWorldPos select [0,2]) nearEntities ['CAManBase',15]) select {(isPlayer _x)}) isEqualTo []) || {(_timeNow > _QS_timeDelete)}) ||
 														{(_allDeadMenCount > _deadMenLimitMax)}
 													) then {
-														missionNamespace setVariable [
-															'QS_analytics_entities_deleted',
-															((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-															_false
-														];
-														deleteVehicle _QS_obj;
+														missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+														if (!isNull (objectParent _QS_obj)) then {
+															if ((objectParent _QS_obj) isKindOf 'AllVehicles') then {
+																(objectParent _QS_obj) deleteVehicleCrew _QS_obj;
+															} else {
+																deleteVehicle _QS_obj;
+															};
+														} else {
+															deleteVehicle _QS_obj;
+														};
 													};
 												};
 											};
@@ -3530,17 +3507,25 @@ for '_x' from 0 to 1 step 0 do {
 				if (!(_QS_garbageCollector isEqualTo [])) then {
 					{
 						if (!isNull _x) then {
-							missionNamespace setVariable [
-								'QS_analytics_entities_deleted',
-								((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-								_false
-							];
-							deleteVehicle _x;
-							uiSleep 0.005;
+							missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+							if (_x isKindOf 'CAManBase') then {
+								if (!isNull (objectParent _x)) then {
+									if ((objectParent _x) isKindOf 'AllVehicles') then {
+										(objectParent _x) deleteVehicleCrew _x;
+									} else {
+										deleteVehicle _x;
+									};
+								} else {
+									deleteVehicle _x;
+								};
+							} else {
+								deleteVehicle _x;
+							};
+							uiSleep 0.007;
 						} else {
 							if (_x isEqualType []) then {
 								_element = _x;
-								_QS_i = (missionNamespace getVariable 'QS_garbageCollector') findIf {((_x select 0) isEqualTo _element)};
+								_QS_i = (missionNamespace getVariable 'QS_garbageCollector') findIf {((_x # 0) isEqualTo _element)};
 								if (!(_QS_i isEqualTo -1)) then {
 									(missionNamespace getVariable 'QS_garbageCollector') set [_QS_i,_false];
 								};
@@ -3562,8 +3547,14 @@ for '_x' from 0 to 1 step 0 do {
 			} forEach (missionNamespace getVariable 'QS_garbageCollector');
 		};
 		_allGroups = allGroups;
-		_allMissionObjectsAll = allMissionObjects '';
-		_allSimpleObjects = allSimpleObjects [];
+		if (_missionObjectsTicker >= 5) then {
+			_missionObjectsTicker = 0;
+			_allMissionObjectsAll = allMissionObjects '';
+		} else {
+			_missionObjectsTicker = _missionObjectsTicker + 1;
+			_allMissionObjectsAll = entities [[],[],_true,_false];
+		};
+		//_allSimpleObjects = allSimpleObjects [];
 		_missionCraters = [];
 		_missionWeaponHolders = [];
 		_missionWeaponHolderSimulated = [];
@@ -3579,11 +3570,7 @@ for '_x' from 0 to 1 step 0 do {
 			_missionObjectType = toLower (typeOf _x);
 			if (_missionObject isKindOf 'CraterLong') then {
 				if (([(getPosATL _missionObject),500,[_west,_civilian],_allPlayers,0] call _fn_serverDetector) isEqualTo []) then {
-					missionNamespace setVariable [
-						'QS_analytics_entities_deleted',
-						((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-						_false
-					];
+					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 					deleteVehicle _missionObject;
 				} else {
 					if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
@@ -3594,11 +3581,7 @@ for '_x' from 0 to 1 step 0 do {
 			};
 			if (_missionObject isKindOf 'WeaponHolder') then {
 				if ((_missionObject distance2D _baseMarker) < 300) then {
-					missionNamespace setVariable [
-						'QS_analytics_entities_deleted',
-						((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-						_false
-					];
+					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 					deleteVehicle _missionObject;
 				} else {
 					0 = _missionWeaponHolders pushBack _missionObject;
@@ -3609,11 +3592,7 @@ for '_x' from 0 to 1 step 0 do {
 				if (!(([(getPosATL _missionObject),100,[_west,_civilian],_allPlayers,0] call _fn_serverDetector) isEqualTo [])) then {
 					0 = _missionGroundWeaponHolders pushBack _missionObject;
 				} else {
-					missionNamespace setVariable [
-						'QS_analytics_entities_deleted',
-						((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-						_false
-					];
+					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 					deleteVehicle _missionObject;
 				};
 				uiSleep 0.005;
@@ -3622,11 +3601,7 @@ for '_x' from 0 to 1 step 0 do {
 				if (!(([(getPosATL _missionObject),100,[_west,_civilian],_allPlayers,0] call _fn_serverDetector) isEqualTo [])) then {
 					0 = _missionWeaponHolderSimulated pushBack _missionObject;
 				} else {
-					missionNamespace setVariable [
-						'QS_analytics_entities_deleted',
-						((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-						_false
-					];
+					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 					deleteVehicle _missionObject;
 				};
 				uiSleep 0.005;
@@ -3644,11 +3619,7 @@ for '_x' from 0 to 1 step 0 do {
 				if (isNull (attachedTo _missionObject)) then {
 					if (([(getPosATL _missionObject),250,[_west,_civilian,_east,_resistance],allUnits,0] call _fn_serverDetector) isEqualTo []) then {
 						if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
-							missionNamespace setVariable [
-								'QS_analytics_entities_deleted',
-								((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-								_false
-							];
+							missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 							deleteVehicle _missionObject;
 						};
 					} else {
@@ -3661,13 +3632,12 @@ for '_x' from 0 to 1 step 0 do {
 			};
 			if (_missionObject isKindOf 'Ruins') then {
 				if (!(_missionObject getVariable ['QS_cleanup_protected',_false])) then {
-					if ((_missionObject distance2D [-1000,-1000,0]) > 100) then {
-						if (([(getPosATL _missionObject),500,[_west,_civilian],_allPlayers,0] call _fn_serverDetector) isEqualTo []) then {
+					if ((_missionObject distance2D [-1000,-1000,0]) > 10) then {
+						if (([(getPosATL _missionObject),500,[_west,_civilian,_east,_resistance],_allPlayers,0] call _fn_serverDetector) isEqualTo []) then {
 							_missionObject setPosWorld [-1000,-1000,0];
 							_missionObject hideObjectGlobal TRUE;
 							_missionObject enableSimulationGlobal FALSE;
 							_missionObject setVariable ['QS_cleanup_protected',_true,_false];
-							missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 						};
 					};
 				};
@@ -3684,36 +3654,27 @@ for '_x' from 0 to 1 step 0 do {
 				};
 			};
 		} count _allMissionObjectsAll;
-		//comment 'Handle aircraft canopy and ejection seats';
 		if (!(_deleteNow isEqualTo [])) then {
 			{
 				if (!isNull _x) then {
-					missionNamespace setVariable [
-						'QS_analytics_entities_deleted',
-						((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-						_false
-					];
+					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 					deleteVehicle _x;
 				};
 			} count _deleteNow;
 			_deleteNow = [];
 		};
 		{
-			_array = _x select 0;
+			_array = _x # 0;
 			if (_array isEqualTo []) exitWith {};
-			_limit = _x select 1;
+			_limit = _x # 1;
 			_count = count _array;
 			if (_count > _limit) then {
 				_n = _count - _limit;
 				_i = 0;
 				for '_x' from 0 to (_n - 1) step 1 do {
-					if (!isNull (_array select _i)) then {
-						missionNamespace setVariable [
-							'QS_analytics_entities_deleted',
-							((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-							_false
-						];
-						deleteVehicle (_array select _i);
+					if (!isNull (_array # _i)) then {
+						missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+						deleteVehicle (_array # _i);
 					};
 					_i = _i + 1;
 					uiSleep 0.01;
@@ -3741,17 +3702,21 @@ for '_x' from 0 to 1 step 0 do {
 			diag_log format ['***** CLEANUP ***** %1 ***** Deleting dead * overflow *****',time];
 			{
 				if (!(_x getVariable ['QS_dead_prop',_false])) then {
-					missionNamespace setVariable [
-						'QS_analytics_entities_deleted',
-						((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-						_false
-					];
-					deleteVehicle _x;
+					missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+					if (!isNull (objectParent _x)) then {
+						if ((objectParent _x) isKindOf 'AllVehicles') then {
+							(objectParent _x) deleteVehicleCrew _x;
+						} else {
+							deleteVehicle _x;
+						};
+					} else {
+						deleteVehicle _x;
+					};
 				};
 			} count allDeadMen;
 		};
 		if ((count (missionNamespace getVariable ['QS_prisoners',[]])) > _maxPrisoners) then {
-			deleteVehicle ((missionNamespace getVariable 'QS_prisoners') select 0);
+			deleteVehicle ((missionNamespace getVariable 'QS_prisoners') # 0);
 			missionNamespace setVariable ['QS_prisoners',((missionNamespace getVariable 'QS_prisoners') select {(alive _x)}),_true];
 		};
 		if (_timeNow > _eastVehicles_delay) then {
@@ -3782,20 +3747,12 @@ for '_x' from 0 to 1 step 0 do {
 							if ((isNull (isVehicleCargo _uav)) && (isNull (ropeAttachedTo _uav)) && (isNull (attachedTo _uav))) then {
 								if (!((attachedObjects _uav) isEqualTo [])) then {
 									{
-										missionNamespace setVariable [
-											'QS_analytics_entities_deleted',
-											((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-											_false
-										];
+										missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 										detach _x;
 										deleteVehicle _x
 									} forEach (attachedObjects _uav);
 								};
-								missionNamespace setVariable [
-									'QS_analytics_entities_deleted',
-									((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-									_false
-								];
+								missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 								deleteVehicle _uav;
 							};
 						};
@@ -3878,20 +3835,20 @@ for '_x' from 0 to 1 step 0 do {
 				};
 				if (_QS_simulateWind) then {
 					if (_timeNow > _QS_windUpdate_checkDelay) then {
-						if ((!((_QS_date select 2) isEqualTo _QS_day_wind)) || {(_QS_refreshWind)}) then {
+						if ((!((_QS_date # 2) isEqualTo _QS_day_wind)) || {(_QS_refreshWind)}) then {
 							if (_QS_refreshWind) then {
 								_QS_refreshWind = _false;
 							};
 							_QS_windArray = [_QS_date,_QS_worldName,'REALISM','WIND'] call _fn_weatherConfig;
 							_QS_windWorkingArray = _QS_windArray;
-							_QS_day_wind = _QS_date select 2;
+							_QS_day_wind = _QS_date # 2;
 							_QS_dayTime_wind = round (_QS_dayTime - 1.01);
 						};
 						if (_QS_dayTime > (_QS_dayTime_wind + 1)) then {
 							if ((count _QS_windWorkingArray) isEqualTo 0) then {
 								_QS_refreshWind = _true;
 							} else {
-								_QS_windNextValue = _QS_windWorkingArray select 0;
+								_QS_windNextValue = _QS_windWorkingArray # 0;
 								setWind _QS_windNextValue;
 								_QS_windWorkingArray deleteAt 0;
 								diag_log format ['***** WEATHER Setting next wind ***** %1 *****',_QS_windNextValue];
@@ -3907,21 +3864,21 @@ for '_x' from 0 to 1 step 0 do {
 				};
 				if (_QS_simulateOvercast) then {
 					if (_timeNow > _QS_overcastUpdate_checkDelay) then {
-						if ((!((_QS_date select 2) isEqualTo _QS_day_overcast)) || {(_QS_refreshOvercast)}) then {
+						if ((!((_QS_date # 2) isEqualTo _QS_day_overcast)) || {(_QS_refreshOvercast)}) then {
 							if (_QS_refreshOvercast) then {
 								_QS_refreshOvercast = _false;
 							};
 							_QS_overcastArray = [_QS_date,_QS_worldName,'REALISM','OVERCAST'] call _fn_weatherConfig;
-							_QS_overcastWorkingArray = _QS_overcastArray select 0;
-							_QS_simulateRain = _QS_overcastArray select 1;
-							_QS_day_overcast = _QS_date select 2;
+							_QS_overcastWorkingArray = _QS_overcastArray # 0;
+							_QS_simulateRain = _QS_overcastArray # 1;
+							_QS_day_overcast = _QS_date # 2;
 							_QS_dayTime_overcast = round (_QS_dayTime - 1);
 						};
 						if (_QS_dayTime > (_QS_dayTime_overcast + 1)) then {
 							if (_QS_overcastWorkingArray isEqualTo []) then {
 								_QS_refreshOvercast = _true;
 							} else {
-								_QS_overcastNextValue = _QS_overcastWorkingArray select 0;
+								_QS_overcastNextValue = _QS_overcastWorkingArray # 0;
 								1800 setOvercast _QS_overcastNextValue;
 								_QS_overcastWorkingArray deleteAt 0;
 								diag_log format ['***** WEATHER setting next overcast ***** %1 *****',_QS_overcastNextValue];
@@ -3952,8 +3909,8 @@ for '_x' from 0 to 1 step 0 do {
 								} else {
 									_QS_nextRainArray = [60,0];
 								};
-								_QS_rainChangeTime = _QS_nextRainArray select 0;
-								_QS_nextRainValue = _QS_nextRainArray select 1;
+								_QS_rainChangeTime = _QS_nextRainArray # 0;
+								_QS_nextRainValue = _QS_nextRainArray # 1;
 								_QS_rainChangeTime setRain _QS_nextRainValue;
 								_QS_dayTime_rain = round (_QS_dayTime - 1);
 							};
@@ -3978,28 +3935,28 @@ for '_x' from 0 to 1 step 0 do {
 				};
 				if (_QS_simulateFog) then {
 					if (_timeNow > _QS_fogUpdate_checkDelay) then {
-						if ((!((_QS_date select 2) isEqualTo _QS_day_fog)) || {(_QS_refreshFog)}) then {
+						if ((!((_QS_date # 2) isEqualTo _QS_day_fog)) || {(_QS_refreshFog)}) then {
 							if (_QS_refreshFog) then {
 								_QS_refreshFog = _false;
 							};
 							_QS_canEnableFog = ((random 1) >= 0.85);
 							if (_QS_canEnableFog) then {
 								_QS_fogEnabled = _true;
-								_QS_fogArray = [_QS_date,_QS_worldName,'REALISM','FOG',(_QS_overcastArray select 0)] call _fn_weatherConfig;
+								_QS_fogArray = [_QS_date,_QS_worldName,'REALISM','FOG',(_QS_overcastArray # 0)] call _fn_weatherConfig;
 								_QS_fogWorkingArray = _QS_fogArray;
 							} else {
 								_QS_fogEnabled = _false;
 							};
-							_QS_day_fog = _QS_date select 2;
+							_QS_day_fog = _QS_date # 2;
 							_QS_dayTime_fog = round (_QS_dayTime - 1);
 						};
 						if (_QS_fogEnabled) then {
 							if (_QS_dayTime > (_QS_dayTime_fog + 1)) then {
 								if ((count _QS_fogWorkingArray) > 0) then {
-									_QS_fogChangeTime = (_QS_fogWorkingArray select 0) select 0;
-									_QS_fogValue = (_QS_fogWorkingArray select 0) select 1;
-									_QS_fogDecay = (_QS_fogWorkingArray select 0) select 2;
-									_QS_fogBase = (_QS_fogWorkingArray select 0) select 3;
+									_QS_fogChangeTime = (_QS_fogWorkingArray # 0) # 0;
+									_QS_fogValue = (_QS_fogWorkingArray # 0) # 1;
+									_QS_fogDecay = (_QS_fogWorkingArray # 0) # 2;
+									_QS_fogBase = (_QS_fogWorkingArray # 0) # 3;
 									_QS_fogChangeTime setFog [_QS_fogValue,_QS_fogDecay,_QS_fogBase];
 									_QS_fogWorkingArray deleteAt 0;
 								} else {
@@ -4021,8 +3978,8 @@ for '_x' from 0 to 1 step 0 do {
 				if (_QS_simulateWaves) then {
 					if (_timeNow > _QS_wavesUpdate_checkDelay) then {
 						_QS_nextWavesArray = [_QS_date,_QS_worldName,'REALISM','WAVES',_QS_currentWind] call _fn_weatherConfig;
-						_QS_wavesChangeTime = _QS_nextWavesArray select 0;
-						_QS_nextWavesValue = _QS_nextWavesArray select 1;
+						_QS_wavesChangeTime = _QS_nextWavesArray # 0;
+						_QS_nextWavesValue = _QS_nextWavesArray # 1;
 						_QS_wavesChangeTime setWaves _QS_nextWavesValue;
 						_QS_wavesUpdate_checkDelay = _timeNow + _QS_wavesUpdate_checkDelay_timer;
 					};
@@ -4033,18 +3990,18 @@ for '_x' from 0 to 1 step 0 do {
 				};
 				if (_QS_simulateLightning) then {
 					if (_timeNow > _QS_lightningsUpdate_checkDelay) then {
-						if (!((_QS_date select 2) isEqualTo _QS_day_lightnings)) then {
+						if (!((_QS_date # 2) isEqualTo _QS_day_lightnings)) then {
 							if ((random 1) >= 0.75) then {
 								_QS_canEnableLightnings = _true;
 							} else {
 								_QS_canEnableLightnings = _false;
 							};
-							_QS_day_lightnings = _QS_date select 2;
+							_QS_day_lightnings = _QS_date # 2;
 						};
 						if (_QS_lightningsEnabled) then {
 							_QS_nextLightningsArray = [_QS_date,_QS_worldName,'REALISM','LIGHTNINGS',_QS_currentOvercast] call _fn_weatherConfig;
-							_QS_lightningsChangeTime = _QS_nextLightningsArray select 0;
-							_QS_lightningsNextValue = _QS_nextLightningsArray select 1;
+							_QS_lightningsChangeTime = _QS_nextLightningsArray # 0;
+							_QS_lightningsNextValue = _QS_nextLightningsArray # 1;
 							if (_QS_currentOvercast > 0.65) then {
 								_QS_lightningsChangeTime setLightnings _QS_lightningsNextValue;
 							} else {
@@ -4067,8 +4024,8 @@ for '_x' from 0 to 1 step 0 do {
 					if (_timeNow > _QS_rainbowUpdate_checkDelay) then {
 						if (_QS_currentRain > 0) then {
 							_QS_nextRainbowArray = [_QS_date,_QS_worldName,'REALISM','RAINBOW',_QS_currentRain] call _fn_weatherConfig;
-							_QS_rainbowChangeTime = _QS_nextRainbowArray select 0;
-							_QS_rainbowNextValue = _QS_nextRainbowArray select 1;
+							_QS_rainbowChangeTime = _QS_nextRainbowArray # 0;
+							_QS_rainbowNextValue = _QS_nextRainbowArray # 1;
 							_QS_rainbowChangeTime setRainbow _QS_rainbowNextValue;
 						} else {
 							if (!(_QS_currentRainbow isEqualTo 0)) then {
@@ -4081,8 +4038,8 @@ for '_x' from 0 to 1 step 0 do {
 				if (_QS_simulateGusts) then {
 					if (_timeNow > _QS_gustsUpdate_checkDelay) then {
 						_QS_nextGustsArray = [_QS_date,_QS_worldName,'REALISM','GUSTS',_QS_currentWind] call _fn_weatherConfig;
-						_QS_gustsChangeTime = _QS_nextGustsArray select 0;
-						_QS_gustsNextValue = _QS_nextGustsArray select 1;
+						_QS_gustsChangeTime = _QS_nextGustsArray # 0;
+						_QS_gustsNextValue = _QS_nextGustsArray # 1;
 						_QS_gustsChangeTime setGusts _QS_gustsNextValue;
 						_QS_gustsUpdate_checkDelay = _timeNow + _QS_gustsUpdate_checkDelay_timer;
 					};
@@ -4100,12 +4057,12 @@ for '_x' from 0 to 1 step 0 do {
 						[0,1],							/*/RAINBOW/*/
 						[0,[0,0,0]]						/*/FOG/*/
 					];
-					((_QS_simulateEvent_data select 2) select 0) setOvercast ((_QS_simulateEvent_data select 2) select 1);
-					((_QS_simulateEvent_data select 3) select 0) setRain ((_QS_simulateEvent_data select 3) select 1);
-					((_QS_simulateEvent_data select 4) select 0) setWaves ((_QS_simulateEvent_data select 4) select 1);
-					((_QS_simulateEvent_data select 5) select 0) setLightnings ((_QS_simulateEvent_data select 5) select 1);
-					((_QS_simulateEvent_data select 6) select 0) setRainbow ((_QS_simulateEvent_data select 6) select 1);
-					((_QS_simulateEvent_data select 7) select 0) setFog ((_QS_simulateEvent_data select 7) select 1);
+					((_QS_simulateEvent_data # 2) # 0) setOvercast ((_QS_simulateEvent_data # 2) # 1);
+					((_QS_simulateEvent_data # 3) # 0) setRain ((_QS_simulateEvent_data # 3) # 1);
+					((_QS_simulateEvent_data # 4) # 0) setWaves ((_QS_simulateEvent_data # 4) # 1);
+					((_QS_simulateEvent_data # 5) # 0) setLightnings ((_QS_simulateEvent_data # 5) # 1);
+					((_QS_simulateEvent_data # 6) # 0) setRainbow ((_QS_simulateEvent_data # 6) # 1);
+					((_QS_simulateEvent_data # 7) # 0) setFog ((_QS_simulateEvent_data # 7) # 1);
 					forceWeatherChange;
 					/*/ WIP /*/
 				};
@@ -4128,29 +4085,29 @@ for '_x' from 0 to 1 step 0 do {
 				};	
 			} else {
 				//comment 'Override is TRUE';
-				if (_timeNow > (_QS_simulateEvent_data select 1)) then {
+				if (_timeNow > (_QS_simulateEvent_data # 1)) then {
 					//comment 'Terminate override';
 					_QS_simulateEvent_override = _false;
 				} else {
-					if ((_QS_simulateEvent_data select 0) isEqualTo 'STORM') then {
+					if ((_QS_simulateEvent_data # 0) isEqualTo 'STORM') then {
 						//comment 'Storm event in progress';
 						if (!(_QS_currentOvercast > 0.95)) then {
-							((_QS_simulateEvent_data select 2) select 0) setOvercast ((_QS_simulateEvent_data select 2) select 1);
+							((_QS_simulateEvent_data # 2) # 0) setOvercast ((_QS_simulateEvent_data # 2) # 1);
 						};
-						if (!(_QS_currentRain isEqualTo ((_QS_simulateEvent_data select 3) select 1))) then {
-							((_QS_simulateEvent_data select 3) select 0) setRain ((_QS_simulateEvent_data select 3) select 1);
+						if (!(_QS_currentRain isEqualTo ((_QS_simulateEvent_data # 3) # 1))) then {
+							((_QS_simulateEvent_data # 3) # 0) setRain ((_QS_simulateEvent_data # 3) # 1);
 						};
-						if (!(_QS_currentWaves isEqualTo ((_QS_simulateEvent_data select 4) select 1))) then {
-							((_QS_simulateEvent_data select 4) select 0) setWaves ((_QS_simulateEvent_data select 4) select 1);
+						if (!(_QS_currentWaves isEqualTo ((_QS_simulateEvent_data # 4) # 1))) then {
+							((_QS_simulateEvent_data # 4) # 0) setWaves ((_QS_simulateEvent_data # 4) # 1);
 						};
-						if (!(_QS_currentLightnings isEqualTo ((_QS_simulateEvent_data select 5) select 1))) then {
-							((_QS_simulateEvent_data select 5) select 0) setLightnings ((_QS_simulateEvent_data select 5) select 1);
+						if (!(_QS_currentLightnings isEqualTo ((_QS_simulateEvent_data # 5) # 1))) then {
+							((_QS_simulateEvent_data # 5) # 0) setLightnings ((_QS_simulateEvent_data # 5) # 1);
 						};
-						if (!(_QS_currentRainbow isEqualTo ((_QS_simulateEvent_data select 6) select 1))) then {
-							((_QS_simulateEvent_data select 6) select 0) setRainbow ((_QS_simulateEvent_data select 6) select 1);
+						if (!(_QS_currentRainbow isEqualTo ((_QS_simulateEvent_data # 6) # 1))) then {
+							((_QS_simulateEvent_data # 6) # 0) setRainbow ((_QS_simulateEvent_data # 6) # 1);
 						};
-						if (!(_QS_currentFog isEqualTo ((_QS_simulateEvent_data select 7) select 1))) then {
-							((_QS_simulateEvent_data select 7) select 0) setFog ((_QS_simulateEvent_data select 7) select 1);
+						if (!(_QS_currentFog isEqualTo ((_QS_simulateEvent_data # 7) # 1))) then {
+							((_QS_simulateEvent_data # 7) # 0) setFog ((_QS_simulateEvent_data # 7) # 1);
 						};	
 					};
 				};
@@ -4200,11 +4157,11 @@ for '_x' from 0 to 1 step 0 do {
 			};
 		};
 		if (_timeNow > _QS_date_checkDelay) then {
-			if (!((date select 2) isEqualTo (_QS_date select 2))) then {
+			if (!((date # 2) isEqualTo (_QS_date # 2))) then {
 				_QS_date = date;
 				_QS_solarHorizons = _QS_date call _fn_sunriseSunsetTime;
-				_QS_sunrise = _QS_solarHorizons select 0;
-				_QS_sunset = _QS_solarHorizons select 1;
+				_QS_sunrise = _QS_solarHorizons # 0;
+				_QS_sunset = _QS_solarHorizons # 1;
 				_QS_solarNoon = (_QS_sunrise + _QS_sunset) / 2;
 			};
 			_QS_date_checkDelay = _timeNow + _QS_date_checkDelay_timer;
@@ -4292,6 +4249,7 @@ for '_x' from 0 to 1 step 0 do {
 							//comment 'Turn off lights';
 							_QS_baseLights_state = _false;
 							missionNamespace setVariable ['QS_base_lamps',_QS_baseLights_state,_true];
+							sleep 0.1;
 							playSound3D ['a3\missions_f_exp\data\sounds\exp_m07_lightsoff_03.wss',objNull,_false,_base_toc,5,1,200];
 							remoteExec ['QS_fnc_clientBaseLights',-2,_false];
 							[0,(missionNamespace getVariable 'QS_AOpos'),250,3] call _fn_aoFires;
@@ -4301,6 +4259,7 @@ for '_x' from 0 to 1 step 0 do {
 							//comment 'Turn on lights';
 							_QS_baseLights_state = _true;
 							missionNamespace setVariable ['QS_base_lamps',_QS_baseLights_state,_true];
+							sleep 0.1;
 							playSound3D ['a3\missions_f_exp\data\sounds\exp_m07_lightson_03.wss',objNull,_false,_base_toc,5,1,200];
 							remoteExec ['QS_fnc_clientBaseLights',-2,_false];
 							[1,(missionNamespace getVariable 'QS_AOpos'),250,3] call _fn_aoFires;
@@ -4337,7 +4296,7 @@ for '_x' from 0 to 1 step 0 do {
 								if ((count _pool) > 1) then {
 									_nextPlayer = selectRandom _pool;
 								} else {
-									_nextPlayer = _pool select 0;
+									_nextPlayer = _pool # 0;
 								};
 							};
 							if (!isNull _nextPlayer) then {
@@ -4355,7 +4314,7 @@ for '_x' from 0 to 1 step 0 do {
 										_memPoints = _nextPlayerVehicle getVariable ['QS_RD_liveFeed_vehicle_memPoints',[]];
 										if (_memPoints isEqualTo []) then {
 											if ((configFile >> 'CfgVehicles' >> (typeOf _nextPlayerVehicle) >> 'memoryPointDriverOptics') isEqualType []) then {
-												_memPoints = (getArray (configFile >> 'CfgVehicles' >> (typeOf _nextPlayerVehicle) >> 'memoryPointDriverOptics')) select 0;
+												_memPoints = (getArray (configFile >> 'CfgVehicles' >> (typeOf _nextPlayerVehicle) >> 'memoryPointDriverOptics')) # 0;
 											};
 											if ((configFile >> 'CfgVehicles' >> (typeOf _nextPlayerVehicle) >> 'memoryPointDriverOptics') isEqualType '') then {
 												_memPoints = getText (configFile >> 'CfgVehicles' >> (typeOf _nextPlayerVehicle) >> 'memoryPointDriverOptics');
@@ -4422,7 +4381,7 @@ for '_x' from 0 to 1 step 0 do {
 		if (_timeNow > _QS_module_recruitableAI_checkDelay) then {
 			if (!(_QS_module_recruitableAI_array isEqualTo [])) then {
 				{
-					_array = _QS_module_recruitableAI_array select _forEachIndex;
+					_array = _QS_module_recruitableAI_array # _forEachIndex;
 					_array params [
 						'_unit',
 						'_delay',
@@ -4446,12 +4405,16 @@ for '_x' from 0 to 1 step 0 do {
 							if (time > _canRespawnAfter) then {
 								if (!isNull _unit) then {
 									if ((_unit distance2D _unitPos) < 500) then {
-										missionNamespace setVariable [
-											'QS_analytics_entities_deleted',
-											((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-											_false
-										];
-										deleteVehicle _unit;
+										missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+										if (!isNull (objectParent _unit)) then {
+											if ((objectParent _unit) isKindOf 'AllVehicles') then {
+												(objectParent _unit) deleteVehicleCrew _unit;
+											} else {
+												deleteVehicle _unit;
+											};
+										} else {
+											deleteVehicle _unit;
+										};
 									} else {
 										if (_QS_remainsCollectorActive) then {
 											if (!(isInRemainsCollector _unit)) then {
@@ -4499,7 +4462,7 @@ for '_x' from 0 to 1 step 0 do {
 											if (!((waypoints (group _unit)) isEqualTo [])) then {
 												for '_x' from 0 to ((count (waypoints (group _unit))) - 1) step 1 do {
 													if ((waypoints (group _unit)) isEqualTo []) exitWith {};
-													deleteWaypoint ((waypoints (group _unit)) select 0);
+													deleteWaypoint ((waypoints (group _unit)) # 0);
 												};
 											};
 											_QS_module_recruitableAI_array set [_forEachIndex,[_unit,_delay,_randomize,_configCode,_t,_unitPos,_unitDir,_false,0,_respawnTickets,_popThreshold]];
@@ -4512,12 +4475,16 @@ for '_x' from 0 to 1 step 0 do {
 					} else {
 						if ((_unit distance2D _unitPos) > 1) then {
 							if (([(getPosATL _unit),500,[_west],_allPlayers,0] call _fn_serverDetector) isEqualTo []) then {
-								missionNamespace setVariable [
-									'QS_analytics_entities_deleted',
-									((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-									_false
-								];
-								deleteVehicle _unit;
+								missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+								if (!isNull (objectParent _unit)) then {
+									if ((objectParent _unit) isKindOf 'AllVehicles') then {
+										(objectParent _unit) deleteVehicleCrew _unit;
+									} else {
+										deleteVehicle _unit;
+									};
+								} else {
+									deleteVehicle _unit;
+								};
 							};
 						};
 						if (!((typeOf _unit) in ['B_helicrew_F','B_helipilot_F','B_pilot_F','B_T_helicrew_F','B_T_helipilot_F','B_T_pilot_F'])) then {
@@ -4548,21 +4515,29 @@ for '_x' from 0 to 1 step 0 do {
 							};
 						};
 						if ((rating _unit) < -1000) then {
-							missionNamespace setVariable [
-								'QS_analytics_entities_deleted',
-								((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-								_false
-							];
-							deleteVehicle _unit;
+							missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+							if (!isNull (objectParent _unit)) then {
+								if ((objectParent _unit) isKindOf 'AllVehicles') then {
+									(objectParent _unit) deleteVehicleCrew _unit;
+								} else {
+									deleteVehicle _unit;
+								};
+							} else {
+								deleteVehicle _unit;
+							};
 						};
 						if (!isNil {_unit getVariable 'QS_unit_isRecruited'}) then {
 							if (!isPlayer (leader (group _unit))) then {
-								missionNamespace setVariable [
-									'QS_analytics_entities_deleted',
-									((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-									_false
-								];
-								deleteVehicle _unit;
+								missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
+								if (!isNull (objectParent _unit)) then {
+									if ((objectParent _unit) isKindOf 'AllVehicles') then {
+										(objectParent _unit) deleteVehicleCrew _unit;
+									} else {
+										deleteVehicle _unit;
+									};
+								} else {
+									deleteVehicle _unit;
+								};
 							};
 						};
 					};
@@ -4580,13 +4555,13 @@ for '_x' from 0 to 1 step 0 do {
 			_QS_messageCount = count _QS_messages;
 			if (_QS_messageCount > 0) then {
 				if (_QS_messageCount > 1) then {
-					_QS_messageCurrent = _QS_messages select _QS_messageCurrentIndex;
+					_QS_messageCurrent = _QS_messages # _QS_messageCurrentIndex;
 					_QS_messageCurrentIndex = _QS_messageCurrentIndex + 1;
 					if (_QS_messageCurrentIndex > _QS_messageCountIndex) then {
 						_QS_messageCurrentIndex = 0;
 					};
 				} else {
-					_QS_messageCurrent = _QS_messages select _QS_messageCurrentIndex;
+					_QS_messageCurrent = _QS_messages # _QS_messageCurrentIndex;
 				};
 				_QS_messageCurrent remoteExec ['systemChat',-2,_false];
 			};
@@ -4698,7 +4673,7 @@ for '_x' from 0 to 1 step 0 do {
 							};
 						};
 					};
-					_QS_module_hc_clientID = _QS_headlessClients select 0;
+					_QS_module_hc_clientID = _QS_headlessClients # 0;
 					if (!(_QS_module_hc_clientID in [-2,-1,0,1,2])) then {
 						{
 							_QS_module_hc_grp = _x;
@@ -4737,20 +4712,16 @@ for '_x' from 0 to 1 step 0 do {
 				};
 			} else {
 				if (_airDefenseOnline) then {
-					if (_timeNow > (_airDefenseArray select 1)) then {
+					if (_timeNow > (_airDefenseArray # 1)) then {
 						_airDefenseOnline = _false;
 						{
-							missionNamespace setVariable [
-								'QS_analytics_entities_deleted',
-								((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-								_false
-							];
+							missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 							deleteVehicle _x;
-						} count (_airDefenseArray select 0);
+						} count (_airDefenseArray # 0);
 						['sideChat',[_west,'AirBase'],'Air defense offline'] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];
 					};
 				};
-				if (_timeNow > (_airDefenseArray select 2)) then {
+				if (_timeNow > (_airDefenseArray # 2)) then {
 					_airDefenseAvailable = _true;
 					missionNamespace setVariable ['QS_airbaseDefense',_false,_true];
 					['sideChat',[_west,'AirBase'],'Air defense available'] remoteExec ['QS_fnc_remoteExecCmd',-2,_false];	
@@ -4767,270 +4738,270 @@ for '_x' from 0 to 1 step 0 do {
 					if (_x isEqualType []) then {
 						_x params ['_type','_puid','_pname','_val'];
 						/*/
-						_type = _x select 0;
-						_puid = _x select 1;
-						_pname = _x select 2;
-						_val = _x select 3;
+						_type = _x # 0;
+						_puid = _x # 1;
+						_pname = _x # 2;
+						_val = _x # 3;
 						/*/
 						if (_type isEqualTo 'TRANSPORT') then {
-							_QS_leaderboards_transport = (missionNamespace getVariable 'QS_leaderboards') select 1;
-							_index = _QS_leaderboards_transport findIf {((_x select 1) isEqualTo _puid)};
+							_QS_leaderboards_transport = (missionNamespace getVariable 'QS_leaderboards') # 1;
+							_index = _QS_leaderboards_transport findIf {((_x # 1) isEqualTo _puid)};
 							if (_index isEqualTo -1) then {
 								_QS_leaderboards_transport pushBack [_val,_puid,_pname];
 								//_QS_leaderboards_transport set [(count _QS_leaderboards_transport),[_val,_puid,_pname]];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
 										_QS_leaderboards_transport,
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							} else {
-								_element = _QS_leaderboards_transport select _index;
-								_element set [0,((_element select 0) + _val)];
+								_element = _QS_leaderboards_transport # _index;
+								_element set [0,((_element # 0) + _val)];
 								_QS_leaderboards_transport set [_index,_element];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
 										_QS_leaderboards_transport,
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							};
 						};
 						if (_type isEqualTo 'REVIVE') then {
-							_QS_leaderboards_revive = (missionNamespace getVariable 'QS_leaderboards') select 2;
-							_index = _QS_leaderboards_revive findIf {((_x select 1) isEqualTo _puid)};
+							_QS_leaderboards_revive = (missionNamespace getVariable 'QS_leaderboards') # 2;
+							_index = _QS_leaderboards_revive findIf {((_x # 1) isEqualTo _puid)};
 							if (_index isEqualTo -1) then {
 								_QS_leaderboards_revive pushBack [_val,_puid,_pname];
 								//_QS_leaderboards_revive set [(count _QS_leaderboards_revive),[_val,_puid,_pname]];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
 										_QS_leaderboards_revive,
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							} else {
-								_element = _QS_leaderboards_revive select _index;
-								_element set [0,((_element select 0) + _val)];
+								_element = _QS_leaderboards_revive # _index;
+								_element set [0,((_element # 0) + _val)];
 								_QS_leaderboards_revive set [_index,_element];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
 										_QS_leaderboards_revive,
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							};						
 						};
 						if (_type isEqualTo 'EARS') then {
-							_QS_leaderboards_ears = (missionNamespace getVariable 'QS_leaderboards') select 3;
-							_index = _QS_leaderboards_ears findIf {((_x select 1) isEqualTo _puid)};
+							_QS_leaderboards_ears = (missionNamespace getVariable 'QS_leaderboards') # 3;
+							_index = _QS_leaderboards_ears findIf {((_x # 1) isEqualTo _puid)};
 							if (_index isEqualTo -1) then {
 								_QS_leaderboards_ears pushBack [_val,_puid,_pname];
 								//_QS_leaderboards_ears set [(count _QS_leaderboards_ears),[_val,_puid,_pname]];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
 										_QS_leaderboards_ears,
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							} else {
-								_element = _QS_leaderboards_ears select _index;
-								_element set [0,((_element select 0) + _val)];
+								_element = _QS_leaderboards_ears # _index;
+								_element set [0,((_element # 0) + _val)];
 								_QS_leaderboards_ears set [_index,_element];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
 										_QS_leaderboards_ears,
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							};					
 						};
 						if (_type isEqualTo 'TOOTH') then {
-							_QS_leaderboards_teeth = (missionNamespace getVariable 'QS_leaderboards') select 4;
-							_index = _QS_leaderboards_teeth findIf {((_x select 1) isEqualTo _puid)};
+							_QS_leaderboards_teeth = (missionNamespace getVariable 'QS_leaderboards') # 4;
+							_index = _QS_leaderboards_teeth findIf {((_x # 1) isEqualTo _puid)};
 							if (_index isEqualTo -1) then {
 								_QS_leaderboards_teeth pushBack [_val,_puid,_pname];
 								//_QS_leaderboards_teeth set [(count _QS_leaderboards_teeth),[_val,_puid,_pname]];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
 										_QS_leaderboards_teeth,
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							} else {
-								_element = _QS_leaderboards_teeth select _index;
-								_element set [0,((_element select 0) + _val)];
+								_element = _QS_leaderboards_teeth # _index;
+								_element set [0,((_element # 0) + _val)];
 								_QS_leaderboards_teeth set [_index,_element];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
 										_QS_leaderboards_teeth,
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							};					
 						};
 						if (_type isEqualTo 'TOWER') then {
-							_QS_leaderboards_tower = (missionNamespace getVariable 'QS_leaderboards') select 5;
-							_index = _QS_leaderboards_tower findIf {((_x select 1) isEqualTo _puid)};
+							_QS_leaderboards_tower = (missionNamespace getVariable 'QS_leaderboards') # 5;
+							_index = _QS_leaderboards_tower findIf {((_x # 1) isEqualTo _puid)};
 							if (_index isEqualTo -1) then {
 								_QS_leaderboards_tower pushBack [_val,_puid,_pname];
 								//_QS_leaderboards_tower set [(count _QS_leaderboards_tower),[_val,_puid,_pname]];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
 										_QS_leaderboards_tower,
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							} else {
-								_element = _QS_leaderboards_tower select _index;
-								_element set [0,((_element select 0) + _val)];
+								_element = _QS_leaderboards_tower # _index;
+								_element set [0,((_element # 0) + _val)];
 								_QS_leaderboards_tower set [_index,_element];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
 										_QS_leaderboards_tower,
-										((missionNamespace getVariable 'QS_leaderboards') select 6),
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 6),
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							};
 						};
 						if (_type isEqualTo 'PRISONER') then {
-							_QS_leaderboards_prisoner = (missionNamespace getVariable 'QS_leaderboards') select 6;
-							_index = _QS_leaderboards_prisoner findIf {((_x select 1) isEqualTo _puid)};
+							_QS_leaderboards_prisoner = (missionNamespace getVariable 'QS_leaderboards') # 6;
+							_index = _QS_leaderboards_prisoner findIf {((_x # 1) isEqualTo _puid)};
 							if (_index isEqualTo -1) then {
 								_QS_leaderboards_prisoner pushBack [_val,_puid,_pname];
 								//_QS_leaderboards_prisoner set [(count _QS_leaderboards_prisoner),[_val,_puid,_pname]];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
 										_QS_leaderboards_prisoner,
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
 							} else {
-								_element = _QS_leaderboards_prisoner select _index;
-								_element set [0,((_element select 0) + _val)];
+								_element = _QS_leaderboards_prisoner # _index;
+								_element set [0,((_element # 0) + _val)];
 								_QS_leaderboards_prisoner set [_index,_element];
 								missionNamespace setVariable [
 									'QS_leaderboards',
 									[
-										((missionNamespace getVariable 'QS_leaderboards') select 0),
-										((missionNamespace getVariable 'QS_leaderboards') select 1),
-										((missionNamespace getVariable 'QS_leaderboards') select 2),
-										((missionNamespace getVariable 'QS_leaderboards') select 3),
-										((missionNamespace getVariable 'QS_leaderboards') select 4),
-										((missionNamespace getVariable 'QS_leaderboards') select 5),
+										((missionNamespace getVariable 'QS_leaderboards') # 0),
+										((missionNamespace getVariable 'QS_leaderboards') # 1),
+										((missionNamespace getVariable 'QS_leaderboards') # 2),
+										((missionNamespace getVariable 'QS_leaderboards') # 3),
+										((missionNamespace getVariable 'QS_leaderboards') # 4),
+										((missionNamespace getVariable 'QS_leaderboards') # 5),
 										_QS_leaderboards_prisoner,
-										((missionNamespace getVariable 'QS_leaderboards') select 7),
-										((missionNamespace getVariable 'QS_leaderboards') select 8),
-										((missionNamespace getVariable 'QS_leaderboards') select 9)
+										((missionNamespace getVariable 'QS_leaderboards') # 7),
+										((missionNamespace getVariable 'QS_leaderboards') # 8),
+										((missionNamespace getVariable 'QS_leaderboards') # 9)
 									],
 									_false
 								];
@@ -5068,11 +5039,7 @@ for '_x' from 0 to 1 step 0 do {
 						if (alive _x) then {
 							if ((_x distance2D _gitmo) > 25) then {
 								if (([(getPosATL _x),200,[_west],_allPlayers,0] call _fn_serverDetector) isEqualTo []) then {
-									missionNamespace setVariable [
-										'QS_analytics_entities_deleted',
-										((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),
-										_false
-									];
+									missionNamespace setVariable ['QS_analytics_entities_deleted',((missionNamespace getVariable 'QS_analytics_entities_deleted') + 1),_false];
 									deleteVehicle _x;
 									_QS_enemyCaptives set [_forEachIndex,_false];
 									_QS_enemyCaptives deleteAt _forEachIndex;
@@ -5109,7 +5076,7 @@ for '_x' from 0 to 1 step 0 do {
 			if (_QS_module_opsec_checkMarkers) then {
 				_QS_allMapMarkers = allMapMarkers;
 				{
-					if (!(_x isEqualTo 'respawn')) then {
+					if (!(_x in ['respawn','respawn_east','respawn_west','respawn_guerrila','respawn_civilian'])) then {
 						if (!(_x in (_QS_module_opsec_checkMarkers_whitelistedMarkers + (missionNamespace getVariable 'QS_markers_whitelistedDynamic')))) then {
 							if (!(_x in (missionNamespace getVariable ['QS_grid_markers',[]]))) then {
 								if (!(['curatorInterface',_x,_false] call _fn_inString)) then {
@@ -5158,13 +5125,6 @@ for '_x' from 0 to 1 step 0 do {
 					_QS_module_heartbeat_checkDelay = _timeNow + _QS_module_heartbeat_delay;
 				};
 			};
-			{
-				removeAllMissionEventHandlers _x;
-			} forEach [
-				'EachFrame',
-				'Draw3D'
-			];
-			onEachFrame {};
 			_QS_module_opsec_checkDelay = _timeNow + _QS_module_opsec_delay;
 		};
 	};
@@ -5282,10 +5242,10 @@ for '_x' from 0 to 1 step 0 do {
 								'_QS_module_emergentTask_logic_fail',
 								'_QS_module_emergentTask_logic_cancel'
 							];
-							if ((_QS_module_emergentTask_logic_created select 0) call (_QS_module_emergentTask_logic_created select 1)) then {
-								_QS_module_emergentTask_countType = {(((_x select 2) isEqualTo _QS_module_emergentTask_type) && ((_x select 1) isEqualTo 'EVAL'))} count (_QS_module_emergentTasks_array select {(_x isEqualType [])});
+							if ((_QS_module_emergentTask_logic_created # 0) call (_QS_module_emergentTask_logic_created # 1)) then {
+								_QS_module_emergentTask_countType = {(((_x # 2) isEqualTo _QS_module_emergentTask_type) && ((_x # 1) isEqualTo 'EVAL'))} count (_QS_module_emergentTasks_array select {(_x isEqualType [])});
 								if (_QS_module_emergentTask_countType < _QS_module_emergentTask_maxType) then {
-									(_QS_module_emergentTask_logic_created select 2) call _fn_setTask;
+									(_QS_module_emergentTask_logic_created # 2) call _fn_setTask;
 									//comment 'Add to eval';
 									_QS_module_emergentTasks_array set [_forEachIndex,[_QS_module_emergentTask_id,'EVAL',_QS_module_emergentTask_type,_QS_module_emergentTask_logic,_QS_module_emergentTask_data]];
 								};
@@ -5300,15 +5260,15 @@ for '_x' from 0 to 1 step 0 do {
 								'_QS_module_emergentTask_logic_fail',
 								'_QS_module_emergentTask_logic_cancel'
 							];
-							if ((_QS_module_emergentTask_logic_success select 0) call (_QS_module_emergentTask_logic_success select 1)) then {
+							if ((_QS_module_emergentTask_logic_success # 0) call (_QS_module_emergentTask_logic_success # 1)) then {
 								[_QS_module_emergentTask_id,'SUCCEEDED',_true] call _fn_taskSetState;
 								_QS_module_emergentTasks_array set [_forEachIndex,[_QS_module_emergentTask_id,'REMOVE',_QS_module_emergentTask_type,_QS_module_emergentTask_logic,_QS_module_emergentTask_data]];
 							} else {
-								if ((_QS_module_emergentTask_logic_fail select 0) call (_QS_module_emergentTask_logic_fail select 1)) then {
+								if ((_QS_module_emergentTask_logic_fail # 0) call (_QS_module_emergentTask_logic_fail # 1)) then {
 									[_QS_module_emergentTask_id,'FAILED',_true] call _fn_taskSetState;
 									_QS_module_emergentTasks_array set [_forEachIndex,[_QS_module_emergentTask_id,'REMOVE',_QS_module_emergentTask_type,_QS_module_emergentTask_logic,_QS_module_emergentTask_data]];
 								} else {
-									if ((_QS_module_emergentTask_logic_cancel select 0) call (_QS_module_emergentTask_logic_cancel select 1)) then {
+									if ((_QS_module_emergentTask_logic_cancel # 0) call (_QS_module_emergentTask_logic_cancel # 1)) then {
 										[_QS_module_emergentTask_id,'CANCELED',_true] call _fn_taskSetState;
 										_QS_module_emergentTasks_array set [_forEachIndex,[_QS_module_emergentTask_id,'REMOVE',_QS_module_emergentTask_type,_QS_module_emergentTask_logic,_QS_module_emergentTask_data]];
 									};
@@ -5354,11 +5314,11 @@ for '_x' from 0 to 1 step 0 do {
 		if (_timeNow > _QS_module_restart_checkDelay) then {
 			if (!(_QS_module_restart_isRestarting)) then {
 				_QS_module_restart_realTimeNow = parseSimpleArray (_QS_ext_date callExtension '');
-				_QS_module_restart_hourCurrent = _QS_module_restart_realTimeNow select 3;
+				_QS_module_restart_hourCurrent = _QS_module_restart_realTimeNow # 3;
 				if (_QS_module_restart_hour < _QS_module_restart_hourCurrent) then {
-					_estimatedTimeLeft = (24 - _QS_module_restart_hourCurrent) + _QS_module_restart_hour - ((_QS_module_restart_realTimeNow select 4) / 60);
+					_estimatedTimeLeft = (24 - _QS_module_restart_hourCurrent) + _QS_module_restart_hour - ((_QS_module_restart_realTimeNow # 4) / 60);
 				} else {
-					_estimatedTimeLeft = (_QS_module_restart_hour - _QS_module_restart_hourCurrent) - ((_QS_module_restart_realTimeNow select 4) / 60);
+					_estimatedTimeLeft = (_QS_module_restart_hour - _QS_module_restart_hourCurrent) - ((_QS_module_restart_realTimeNow # 4) / 60);
 				};
 				_estimatedTimeLeft = _estimatedTimeLeft * 3600;
 				estimatedTimeLeft (0 max _estimatedTimeLeft min 36000);

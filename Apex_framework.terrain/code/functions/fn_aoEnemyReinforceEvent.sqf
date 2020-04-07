@@ -21,7 +21,7 @@ QS_fnc_aoEnemyReinforceEvent = {
 		private ['_centerPos','_foundSpawnPos','_spawnPos','_v','_grp','_direction','_HLZ','_unit','_unitType','_unitTypes','_grp2','_wp','_foundHLZ','_helipad','_array'];
 		_type = param [1,'O_Heli_Transport_04_covered_F'];
 		_array = [];
-		_centerPos = markerPos 'QS_marker_hqMarker';
+		_centerPos = QS_hqPos;
 		_unitTypes = [
 			"I_C_Soldier_Bandit_7_F","I_C_Soldier_Bandit_3_F","I_C_Soldier_Bandit_2_F","I_C_Soldier_Bandit_5_F","I_C_Soldier_Bandit_6_F",
 			"I_C_Soldier_Bandit_1_F","I_C_Soldier_Bandit_8_F","I_C_Soldier_Bandit_4_F","I_C_Soldier_Para_7_F","I_C_Soldier_Para_2_F","I_C_Soldier_Para_3_F",
@@ -63,7 +63,7 @@ QS_fnc_aoEnemyReinforceEvent = {
 				FALSE
 			];
 			0 = _array pushBack _v;
-			createVehicleCrew _v;
+			_grp = createVehicleCrew _v;
 			(missionNamespace getVariable 'QS_AI_vehicles') pushBack _v;
 			missionNamespace setVariable [
 				'QS_analytics_entities_created',
@@ -93,7 +93,6 @@ QS_fnc_aoEnemyReinforceEvent = {
 					_damage;
 				}
 			];
-			_grp = group (driver _v);
 			_v allowCrewInImmobile TRUE;
 			_v lock 3;
 			_grp setVariable ['QS_IA_spawnPos',_spawnPos,FALSE];
@@ -234,15 +233,11 @@ QS_fnc_aoEnemyReinforceEvent = {
 		_array;
 	};
 };
-
-
-systemChat str (nearestObjects [player,['Land_HelipadEmpty_F'],500,TRUE]);
-
 QS_fnc_aoEnemyReinforceEvent = {
 	_event = _this select 0;
 	if (_event isEqualTo 1) exitWith {
 		private ['_centerPos','_foundSpawnPos','_spawnPos','_v','_grp','_direction','_HLZ','_unit','_unitType','_unitTypes','_grp2','_wp','_foundHLZ','_helipad','_array'];
-		_type = param [1,'O_Heli_Transport_04_covered_F']; //comment "O_Heli_Light_02_unarmed_F";
+		_type = param [1,'O_Heli_Transport_04_covered_F'];
 		_array = [];
 		_centerPos = position player;
 		_unitTypes = [
@@ -255,11 +250,9 @@ QS_fnc_aoEnemyReinforceEvent = {
 			for '_x' from 0 to 49 step 1 do {
 				_spawnPos = _centerPos getPos [(2000 + (random 2000)),(random 360)];
 				if ((allPlayers findIf {((_x distance2D _spawnPos) < 400)}) isEqualTo -1) then {
-					//comment "if ((_spawnPos distance2D (markerPos 'QS_marker_base_marker')) > 2000) then {";
 						if ((_spawnPos distance2D _centerPos) < 1201) then {
 							_foundSpawnPos = TRUE;
 						};
-					//comment "};";
 				};
 				if (_foundSpawnPos) exitWith {};
 			};
@@ -284,7 +277,7 @@ QS_fnc_aoEnemyReinforceEvent = {
 				FALSE
 			];
 			0 = _array pushBack _v;
-			createVehicleCrew _v;
+			_grp = createVehicleCrew _v;
 			missionNamespace setVariable [
 				'QS_analytics_entities_created',
 				((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _v))),
@@ -292,7 +285,6 @@ QS_fnc_aoEnemyReinforceEvent = {
 			];
 			_v engineOn TRUE;
 			{
-				//comment "_x call (missionNamespace getVariable 'QS_fnc_unitSetup');";
 				0 = _array pushBack _x;
 			} count (crew _v);
 			_v addEventHandler [
@@ -313,7 +305,6 @@ QS_fnc_aoEnemyReinforceEvent = {
 					_damage;
 				}
 			];
-			_grp = group (driver _v);
 			_v setUnloadInCombat [FALSE,FALSE];
 			_v allowCrewInImmobile TRUE;
 			_v flyInHeight (25 + (random 30));
@@ -337,7 +328,6 @@ QS_fnc_aoEnemyReinforceEvent = {
 					((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
 					FALSE
 				];
-				//comment "_unit = _unit call (missionNamespace getVariable 'QS_fnc_unitSetup');";
 				_unit assignAsCargo _v;
 				_unit moveInAny _v;
 				0 = _array pushBack _unit;
@@ -455,4 +445,4 @@ QS_fnc_aoEnemyReinforceEvent = {
 		_array;
 	};
 };
-[1,'O_Heli_Light_02_unarmed_F'] spawn QS_fnc_aoEnemyReinforceEvent;
+[1,'O_Heli_Transport_04_covered_F'] spawn QS_fnc_aoEnemyReinforceEvent;

@@ -6,7 +6,7 @@ Author:
 	
 Last modified:
 
-	27/03/2018 A3 1.82 by Quiksilver
+	27/05/2019 A3 1.92 by Quiksilver
 	
 Description:
 
@@ -33,10 +33,11 @@ ___________________________________________/*/
 	'Open cargo doors',
 	'Close cargo doors',
 	'Service vehicle',
+	'Service',
 	'Clear vehicle inventory',
 	'Unflip',
 	'Revive',
-	'Arsenal',
+	(localize 'STR_A3_Arsenal'),
 	'Beacons On',
 	'Beacons Off',
 	'Tow',
@@ -87,8 +88,8 @@ ___________________________________________/*/
 	'5 - (Target) Repair',
 	'6 - (Target) Pardon',
 	'7 - (Target) Punish',
-	'8 - Anti-hack (toggle)',
-	'9 - Tag Map Markers',
+	'8 - No function assigned',
+	'9 - No function assigned',
 	'10 - (Target) Revive',
 	'11 - Map Teleport',
 	'12 - (Clean) Base',
@@ -131,5 +132,6 @@ ___________________________________________/*/
 	'Attach To Cargo Ropes',
 	'Drop Cargo Ropes',
 	'Pickup Cargo Ropes',
-	(if (isLocalized 'STR_A3_action_Recover_Boat') then {localize 'STR_A3_action_Recover_Boat'} else {'Recover boat'})
+	(if (isLocalized 'STR_A3_action_Recover_Boat') then {localize 'STR_A3_action_Recover_Boat'} else {'Recover boat'}),
+	'Role Selection'
 ]

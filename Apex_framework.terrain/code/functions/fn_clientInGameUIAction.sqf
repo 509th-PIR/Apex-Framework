@@ -6,7 +6,7 @@ Author:
 	
 Last modified:
 
-	12/10/2018 A3 1.84 by Quiksilver
+	21/11/2018 A3 1.86 by Quiksilver
 	
 Description:
 	
@@ -133,10 +133,8 @@ if (_QS_actionName isEqualTo 'HealSoldier') exitWith {
 			if ((_injured distance player) > 2.5) then {
 				player setVariable ['QS_treat_target',objNull,FALSE];
 				if ((lifeState player) in ['HEALTHY','INJURED']) then {
-					_nearbyPlayers = (allPlayers inAreaArray [(getPos player),100,100,0,FALSE,-1]) select {(!(_x isEqualTo player))};
-					if (!(_nearbyPlayers isEqualTo [])) then {
-						['switchMove',player,(player getVariable ['QS_treat_entryAnim',''])] remoteExec ['QS_fnc_remoteExecCmd',_nearbyPlayers,FALSE];
-					};
+					_nearbyPlayers = allPlayers inAreaArray [(getPos player),100,100,0,FALSE,-1];
+					['switchMove',player,(player getVariable ['QS_treat_entryAnim',''])] remoteExec ['QS_fnc_remoteExecCmd',_nearbyPlayers,FALSE];
 				};
 			};
 			if (!isNull (player getVariable 'QS_treat_target')) then {
@@ -234,8 +232,8 @@ if (_QS_actionName isEqualTo 'Eject') exitWith {
 	_QS_c;
 };
 if (_QS_actionName isEqualTo 'GetInPilot') exitWith {
-	if ((!((toLower (typeOf player)) in ['b_pilot_f','b_helipilot_f','b_t_pilot_f','b_t_helipilot_f','b_fighter_pilot_f'])) && (!(player getUnitTrait 'QS_trait_pilot')) && (!(player getUnitTrait 'QS_trait_fighterPilot'))) then {
-		_text = format ['ROBOCOP: Pilot seats are for Pilots only! You are a(n) ***** %1 *****. Play your role or re-assign!',(getText (configFile >> 'CfgVehicles' >> (typeOf player) >> 'displayName'))];
+	if ((!(player getUnitTrait 'QS_trait_pilot')) && (!(player getUnitTrait 'QS_trait_fighterPilot'))) then {
+		_text = 'Pilot seats are for Pilots only!';
 		(missionNamespace getVariable 'QS_managed_hints') pushBack [1,FALSE,8,-1,_text,[],-1];
 		_QS_c = TRUE;
 	};
@@ -270,7 +268,7 @@ if (_QS_actionName isEqualTo 'GetInPilot') exitWith {
 	]) then {
 		if (!(player getUnitTrait 'QS_trait_fighterPilot')) then {
 			_QS_c = TRUE;
-			_text = 'Only fighter pilots (Lobby Role) can use this aircraft';
+			_text = 'Only fighter pilots can use this aircraft';
 			50 cutText [_text,'PLAIN',0.5];
 		};
 	};
@@ -376,10 +374,10 @@ if (_QS_actionName isEqualTo 'GetInTurret') exitWith {
 	if ((!isNil {player getVariable 'QS_tto'}) && ((player getVariable 'QS_tto') > 3)) then {
 		_QS_c = TRUE;
 	};
-	if (['Copilot',(_this select 4),FALSE] call (missionNamespace getVariable 'QS_fnc_inString')) then {
-		if (!((typeOf (_this select 0)) in ['B_Heli_Light_01_F','B_Heli_Light_01_stripped_F','I_Heli_light_03_F','I_Heli_light_03_unarmed_F','I_Heli_light_03_dynamicLoadout_F'])) then {
+	if (['Copilot',(_this # 4),FALSE] call (missionNamespace getVariable 'QS_fnc_inString')) then {
+		if (!( (toLower (typeOf (_this # 0))) in ['b_heli_light_01_f','b_heli_light_01_stripped_f','i_heli_light_03_f','i_heli_light_03_unarmed_f','i_heli_light_03_dynamicloadout_f','i_e_heli_light_03_dynamicloadout_f'])) then {
 			if ((count allPlayers) > 20) then {
-				if (!((typeOf player) in ['B_Helipilot_F','B_pilot_F','B_T_Helipilot_F','B_T_pilot_F'])) then {
+				if ((!(player getUnitTrait 'QS_trait_pilot')) && (!(player getUnitTrait 'QS_trait_fighterPilot'))) then {
 					_QS_c = TRUE;
 				};
 			};
@@ -514,7 +512,7 @@ if (_QS_actionName isEqualTo 'DisAssemble') then {
 if (_QS_actionName in ['TakeVehicleControl','MoveToPilot']) then {
 	if (!(player getUnitTrait 'QS_trait_pilot')) then {
 		if ((vehicle player) isKindOf 'Air') then {
-			if (!((typeOf (vehicle player)) in ['B_Heli_Light_01_F','B_Heli_Light_01_stripped_F'])) then {
+			if (!((toLower (typeOf (vehicle player))) in ['b_heli_light_01_f','b_heli_light_01_stripped_f'])) then {
 				if ((count allPlayers) > 20) then {
 					_QS_c = TRUE;
 				};
@@ -547,7 +545,7 @@ if (_QS_actionName isEqualTo 'AutoHover') then {
 };
 if (_QS_actionName isEqualTo 'UAVTerminalHackConnection') then {
 	if (!local _QS_actionTarget) then {
-		_text = format ['%1 (%2) has hacked a(n) %3!',profileName,(getText (configFile >> 'CfgVehicles' >> (typeOf player) >> 'displayName')),(getText (configFile >> 'CfgVehicles' >> (typeOf _QS_actionTarget) >> 'displayName'))];
+		_text = format ['%1 has hacked a(n) %2!',profileName,(getText (configFile >> 'CfgVehicles' >> (typeOf _QS_actionTarget) >> 'displayName'))];
 		['systemChat',_text] remoteExec ['QS_fnc_remoteExecCmd',-2,FALSE];
 	};
 	_QS_actionTarget spawn {
@@ -652,6 +650,12 @@ if (_QS_actionName isEqualTo 'UnhookCargo') then {
 			};
 		};
 	} else {
+		_QS_c = TRUE;
+	};
+};
+if (_QS_actionName isEqualTo 'ManualFire') then {
+	if ((cameraOn distance2D (markerPos 'QS_marker_base_marker')) < 600) then {
+		50 cutText ['Manual Fire disabled near base','PLAIN DOWN',0.5];
 		_QS_c = TRUE;
 	};
 };

@@ -48,13 +48,14 @@ private _newPosZ = 0;
 		[(cos _azi),(sin _azi)],
 		[-(sin _azi),(cos _azi)]
 	];
+	//_newRelPos = _rotMatrix matrixMultiply _relPos;
 	_newRelPos = [_rotMatrix,_relPos] call (missionNamespace getVariable 'QS_fnc_commonMultiplyMatrix');
 	if ((count _relPos) > 2) then {
-		_z = _relPos select 2;
+		_z = _relPos # 2;
 	} else {
 		_z = 0;
 	};
-	_newPos = [(_posX + (_newRelPos select 0)),(_posY + (_newRelPos select 1)),_z];
+	_newPos = [(_posX + (_newRelPos # 0)),(_posY + (_newRelPos # 1)),_z];
 	if (surfaceIsWater _newPos) then {
 		if ((getTerrainHeightASL _newPos) < 0) then {
 			_newPos set [2,(_z + (getTerrainHeightASL _newPos))];
@@ -69,7 +70,7 @@ private _newPosZ = 0;
 		if (!((_model select [((count _model) - 4),4]) isEqualTo '.p3d')) then {
 			_model = _model + '.p3d';
 		};
-		_newPosZ = _newPos select 2;
+		_newPosZ = _newPos # 2;
 		_newPos set [2,((getNumber (_configClass >> 'SimpleObject' >> 'verticalOffset')) + _newPosZ)];
 		_newPos = ATLToASL _newPos;
 		if (_useRecycler) then {
@@ -110,7 +111,7 @@ private _newPosZ = 0;
 			sleep 0.1;
 			_newObj setDir (_azi + _azimuth);
 			_newObj setPos _newPos;
-			if (_newObj isKindOf 'House') then {
+			if ((_newObj isKindOf 'House') || {(!((_newObj buildingPos -1) isEqualTo []))}) then {
 				_newObj setVectorUp [0,0,1];
 			};
 		};

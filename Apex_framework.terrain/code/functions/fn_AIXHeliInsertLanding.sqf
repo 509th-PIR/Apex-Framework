@@ -55,17 +55,17 @@ _grp move (_v getVariable ['QS_heli_centerPosition',[0,0,0]]);
 	_x setUnitPosWeak 'MIDDLE';
 	doStop _x;
 	_x doMove (_v getVariable ['QS_heli_centerPosition',[0,0,0]]);
-} forEach (units _grp);	
+} forEach (units _grp);
 _helipad = _v getVariable ['QS_assignedHelipad',objNull];
 if (!isNull _helipad) then {
 	deleteVehicle _helipad;
 };
+_v land 'NONE';
 _wp = _g addWaypoint [(_v getVariable ['QS_heli_spawnPosition',[0,0,50]]),0];
 _wp setWaypointType 'MOVE';
 _wp setWaypointSpeed 'FULL';
 _wp setWaypointBehaviour 'CARELESS';
 _wp setWaypointCombatMode 'BLUE';
-_wp setWaypointForceBehaviour TRUE;
 _wp setWaypointCompletionRadius 150;
 _wp setWaypointStatements [
 	'TRUE',
@@ -87,12 +87,14 @@ if (!isNull (_v getVariable ['QS_heliInsert_supportHeli',objNull])) then {
 	if (alive _supportHeli) then {
 		if (!(((crew _supportHeli) findIf {(alive _x)}) isEqualTo -1)) then {
 			_supportGroup = group (effectiveCommander _supportHeli);
+			_supportGroup lockWP FALSE;
 			[_supportHeli,_supportGroup,_v] spawn {
 				params ['_supportHeli','_supportGroup','_v'];
 				sleep 10;
 				_supportGroup = group (effectiveCommander _supportHeli);
 				_supportGroup setCombatMode 'BLUE';
 				_supportGroup setBehaviour 'CARELESS';
+				_supportGroup setBehaviourStrong 'CARELESS';
 				_supportGroup setSpeedMode 'FULL';
 				private _unit = objNull;
 				{

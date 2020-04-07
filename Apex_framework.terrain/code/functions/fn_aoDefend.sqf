@@ -40,14 +40,14 @@ private [
 diag_log 'Defend AO 0';
 if (time < 300) exitWith {};
 _allPlayersCount = count allPlayers;
-if (diag_fps < 13) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+if ((diag_fps < 13) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
 if ((([(missionNamespace getVariable 'QS_HQpos'),500,[WEST],allUnits,1] call (missionNamespace getVariable 'QS_fnc_serverDetector')) < 4) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
 if (((random 1) > 0.333) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
 if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 2) then {};
 if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 1) then {missionNamespace setVariable ['QS_forceDefend',0,TRUE];};
 if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo -1) exitWith {missionNamespace setVariable ['QS_forceDefend',0,TRUE];missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
 if ((missionNamespace getVariable 'QS_forceDefend') isEqualTo -2) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
-if ((_allPlayersCount > 60) && ((missionNamespace getVariable 'QS_defendCount') > 3)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
+if ((_allPlayersCount > 60) && ((missionNamespace getVariable 'QS_defendCount') > 3) && ((missionNamespace getVariable 'QS_forceDefend') isEqualTo 0)) exitWith {missionNamespace setVariable ['QS_defendActive',FALSE,TRUE];};
 diag_log 'Defend AO 0.5';
 missionNamespace setVariable ['QS_defendCount',((missionNamespace getVariable 'QS_defendCount') + 1),TRUE];
 missionNamespace setVariable ['QS_defendActive',TRUE,TRUE];
@@ -145,13 +145,13 @@ _infantryArray = [];
 _infantryCheckDelay = _tickTimeNow + 10;
 _infantrySpawnDelay = time + 10;
 if (worldName isEqualTo 'Tanoa') then {
+	_infantrySpawnDistanceFixed = 700;
+	_infantrySpawnDistanceRandom = 800;
+	_infantrySpawnDistanceFromPlayer = 350;
+} else {
 	_infantrySpawnDistanceFixed = 800;
 	_infantrySpawnDistanceRandom = 1000;
-	_infantrySpawnDistanceFromPlayer = 500;
-} else {
-	_infantrySpawnDistanceFixed = 1000;
-	_infantrySpawnDistanceRandom = 1250;
-	_infantrySpawnDistanceFromPlayer = 500;
+	_infantrySpawnDistanceFromPlayer = 400;
 };
 _infTypes = [
 	'OIA_InfTeam_AA',0.25,
@@ -299,9 +299,9 @@ if (_allPlayersCount > 30) then {_helicoptersToSpawn = 1;};
 if (_allPlayersCount > 40) then {_helicoptersToSpawn = 2;};
 if (_allPlayersCount > 50) then {_helicoptersToSpawn = 2;};
 if (_allPlayersCount > 20) then {
-	if (worldName isEqualTo 'Tanoa') then {
+	if (worldName in ['Tanoa','Enoch']) then {
 		_helicopterTypes = [
-			'o_heli_light_02_dynamicloadout_f','i_heli_light_03_dynamicloadout_f','o_heli_light_02_dynamicloadout_f','i_heli_light_03_dynamicloadout_f'
+			'o_heli_light_02_dynamicloadout_f','i_e_heli_light_03_dynamicloadout_f','o_heli_light_02_dynamicloadout_f','i_e_heli_light_03_dynamicloadout_f'
 		];
 	} else {
 		_helicopterTypes = [
@@ -312,7 +312,7 @@ if (_allPlayersCount > 20) then {
 	};
 } else {
 	_helicopterTypes = [
-		'o_heli_light_02_dynamicloadout_f','i_heli_light_03_dynamicloadout_f'
+		'o_heli_light_02_dynamicloadout_f',(['i_heli_light_03_dynamicloadout_f','i_e_heli_light_03_dynamicloadout_f'] select (worldName in ['Tanoa','Enoch']))
 	];
 };
 _helicopterType = '';
@@ -359,15 +359,15 @@ if ((random 1) > 0.666) then {
 };
 if (worldName isEqualTo 'Tanoa') then {
 	_vParaTypes = [
-		'O_T_MRAP_02_hmg_ghex_F','O_T_UGV_01_rcws_ghex_F','O_T_MRAP_02_gmg_ghex_F','O_T_LSV_02_armed_F','O_T_LSV_02_armed_F',
+		'O_T_MRAP_02_hmg_ghex_F','O_T_MRAP_02_gmg_ghex_F','O_T_LSV_02_armed_F','O_T_LSV_02_armed_F',
 		'I_MRAP_03_gmg_F','I_MRAP_03_hmg_F','Land_Pod_Heli_Transport_04_covered_F','Land_Pod_Heli_Transport_04_bench_F','Land_Pod_Heli_Transport_04_bench_F',
-		'Land_Pod_Heli_Transport_04_covered_F','O_T_UGV_01_rcws_ghex_F'
+		'Land_Pod_Heli_Transport_04_covered_F'
 	];
 } else {
 	_vParaTypes = [
-		'O_MRAP_02_hmg_F','O_UGV_01_rcws_F','I_UGV_01_rcws_F','O_MRAP_02_gmg_F','O_G_Offroad_01_armed_F','O_G_Offroad_01_armed_F',
+		'O_MRAP_02_hmg_F','O_MRAP_02_gmg_F','O_G_Offroad_01_armed_F','O_G_Offroad_01_armed_F',
 		'I_MRAP_03_gmg_F','I_MRAP_03_hmg_F','Land_Pod_Heli_Transport_04_covered_F','Land_Pod_Heli_Transport_04_bench_F','Land_Pod_Heli_Transport_04_bench_F',
-		'Land_Pod_Heli_Transport_04_covered_F','O_UGV_01_rcws_F','I_UGV_01_rcws_F'
+		'Land_Pod_Heli_Transport_04_covered_F'
 	];
 };
 _vParaType = '';
@@ -523,7 +523,7 @@ for '_x' from 0 to 1 step 0 do {
 						((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
 						FALSE
 					];
-					createVehicleCrew _uav;
+					_grp = createVehicleCrew _uav;
 					missionNamespace setVariable [
 						'QS_analytics_entities_created',
 						((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _uav))),
@@ -546,27 +546,22 @@ for '_x' from 0 to 1 step 0 do {
 					_uav setDir _direction;
 					_uav enableRopeAttach FALSE;
 					_uav enableVehicleCargo FALSE;
-					_grp = group (effectiveCommander _uav);
-					if (!isNil '_grp') then {
-						if (!isNull _grp) then {
-							[(units _grp),0] call _fn_setAISkill;
-							_wp = _grp addWaypoint [_centerPos,0];
-							_wp setWaypointType 'LOITER';
-							_wp setWaypointSpeed 'NORMAL';
-							_wp setWaypointBehaviour 'CARELESS';
-							_wp setWaypointCombatMode 'WHITE';
-							_wp setWaypointLoiterType 'CIRCLE';
-							_wp setWaypointLoiterRadius (800 + (random 300));
-							_uav setVehicleReportRemoteTargets TRUE;
-							_uav setVehicleReceiveRemoteTargets TRUE;
-							_uav setVehicleRadar 1;
-							_uav flyInHeight _uavFlyInHeight;
-							_uav flyInHeightASL [_uavFlyInHeight,_uavFlyInHeight,_uavFlyInHeight];
-							_grp setFormDir _direction;
-							(gunner _uav) doWatch _centerPos;
-							_uavSpawnDelay = time + 5;
-						};
-					};
+					[(units _grp),0] call _fn_setAISkill;
+					_wp = _grp addWaypoint [_centerPos,0];
+					_wp setWaypointType 'LOITER';
+					_wp setWaypointSpeed 'NORMAL';
+					_wp setWaypointBehaviour 'CARELESS';
+					_wp setWaypointCombatMode 'WHITE';
+					_wp setWaypointLoiterType 'CIRCLE';
+					_wp setWaypointLoiterRadius (800 + (random 300));
+					_uav setVehicleReportRemoteTargets TRUE;
+					_uav setVehicleReceiveRemoteTargets TRUE;
+					_uav setVehicleRadar 1;
+					_uav flyInHeight _uavFlyInHeight;
+					_uav flyInHeightASL [_uavFlyInHeight,_uavFlyInHeight,_uavFlyInHeight];
+					_grp setFormDir _direction;
+					(gunner _uav) doWatch _centerPos;
+					_uavSpawnDelay = time + 5;
 				};
 			};
 			_uavCheckDelay = time + 5;
@@ -621,7 +616,7 @@ for '_x' from 0 to 1 step 0 do {
 			};
 			_grp enableAttack FALSE;
 			_grp setCombatMode 'YELLOW';
-			_grp setBehaviour 'AWARE';
+			_grp setBehaviourStrong 'AWARE';
 			_grp setSpeedMode 'FULL';
 			if ((random 1) > 0.5) then {
 				{
@@ -671,6 +666,7 @@ for '_x' from 0 to 1 step 0 do {
 				_wp setWaypointSpeed 'FULL';
 				_wp setWaypointBehaviour 'AWARE';
 				_wp setWaypointCombatMode 'YELLOW';
+				_grp setBehaviourStrong 'AWARE';
 				_wp setWaypointForceBehaviour TRUE;
 				_wp setWaypointCompletionRadius 5;
 				_grp setCurrentWaypoint _wp;
@@ -754,19 +750,24 @@ for '_x' from 0 to 1 step 0 do {
 				_av lock 2;
 				_direction = _spawnPos getDir _centerPos;
 				_av setDir _direction;
-				createVehicleCrew _av;
-				missionNamespace setVariable [
-					'QS_analytics_entities_created',
-					((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _av))),
-					FALSE
-				];
-				_grp = group ((crew _av) select 0);
+				_grp = createVehicleCrew _av;
+				missionNamespace setVariable ['QS_analytics_entities_created',((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _av))),FALSE];
 				_destination = [_centerPos,(200 + (random 200)),(50 + (random 50)),10] call _fn_findOverwatchPos;
 				_grp move _destination;
 				_grp addVehicle _av;
 				{
 					doStop _x;
 					_x doMove _destination;
+					_x addEventHandler [
+						'Killed',
+						{
+							params ['_killed'];
+							_vehicle = vehicle _killed;
+							if (((crew _vehicle) findIf {(alive _x)}) isEqualTo -1) then {
+								_vehicle setDamage [1,TRUE];
+							};
+						}
+					];
 				} forEach (units _grp);
 				_av enableRopeAttach FALSE;
 				_av enableVehicleCargo FALSE;
@@ -781,6 +782,7 @@ for '_x' from 0 to 1 step 0 do {
 				];
 				[(units _grp),([1,2] select ((random 1) > 0.85))] call _fn_setAISkill;
 				_grp setCombatMode 'RED';
+				_grp setBehaviourStrong 'AWARE';
 				{
 					0 = _allArray pushBack _x;
 				} count (units _grp);
@@ -855,13 +857,12 @@ for '_x' from 0 to 1 step 0 do {
 						clearBackpackCargoGlobal _v;
 						_direction = _spawnPos getDir _centerPos;
 						_v setDir _direction;
-						createVehicleCrew _v;
+						_grp = createVehicleCrew _v;
 						missionNamespace setVariable [
 							'QS_analytics_entities_created',
 							((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _v))),
 							FALSE
 						];
-						_grp = group ((crew _v) select 0);
 						[(units _grp),3] call _fn_setAISkill;
 						_v allowDamage TRUE;
 						_v addEventHandler [
@@ -913,11 +914,7 @@ for '_x' from 0 to 1 step 0 do {
 						for '_x' from 0 to (round(((_v emptyPositions 'Cargo') - 1) / _divisor)) step 1 do {
 							_unitType = selectRandom _unitTypes;
 							_unit = _grp2 createUnit [_unitType,[0,0,0],[],0,'NONE'];
-							missionNamespace setVariable [
-								'QS_analytics_entities_created',
-								((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
-								FALSE
-							];
+							missionNamespace setVariable ['QS_analytics_entities_created',((missionNamespace getVariable 'QS_analytics_entities_created') + 1),FALSE];
 							sleep 0.1;
 							_unit = _unit call _fn_unitSetup;
 							_unit moveInAny _v;
@@ -940,7 +937,7 @@ for '_x' from 0 to 1 step 0 do {
 							'TRUE',
 							'
 								if (local this) then {
-									(group this) setBehaviour "CARELESS";
+									(group this) setBehaviourStrong "CARELESS";
 									_v = vehicle this;
 									{
 										if (!(_x isEqualTo this)) then {
@@ -996,19 +993,9 @@ for '_x' from 0 to 1 step 0 do {
 					_spawnPos set [2,(800 + (random 400))];
 					_vParaType = selectRandom _vParaTypes;
 					_vParaV = createVehicle [_vParaType,[0,0,(100 + (random 1000))],[],0,'NONE'];
-					missionNamespace setVariable [
-						'QS_analytics_entities_created',
-						((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
-						FALSE
-					];
+					missionNamespace setVariable ['QS_analytics_entities_created',((missionNamespace getVariable 'QS_analytics_entities_created') + 1),FALSE];
 					0 = _allArray pushBack _vParaV;
 					_vParaV setVariable ['QS_uav_protected',TRUE,(!isServer)];
-					createVehicleCrew _vParaV;
-					missionNamespace setVariable [
-						'QS_analytics_entities_created',
-						((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _vParaV))),
-						FALSE
-					];
 					_vParaV setPos _spawnPos;
 					_vParaV enableRopeAttach FALSE;
 					_vParaV enableVehicleCargo FALSE;
@@ -1018,31 +1005,35 @@ for '_x' from 0 to 1 step 0 do {
 					clearWeaponCargoGlobal _vParaV;
 					clearItemCargoGlobal _vParaV;
 					clearBackpackCargoGlobal _vParaV;
+					createVehicleCrew _vParaV;
 					if (!((crew _vParaV) isEqualTo [])) then {
-						_grp = group ((crew _vParaV) select 0);
+						missionNamespace setVariable ['QS_analytics_entities_created',((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _vParaV))),FALSE];
+						_grp = group (effectiveCommander _vParaV);
 						{
 							_x call _fn_unitSetup;
 							0 = _allArray pushBack _x;
-						} count (units _grp);
+						} forEach (units _grp);
+						_grp move (selectRandom _hqBuildingPositions);
+						[(units _grp),1] call _fn_setAISkill;
 					};
-					_grp move (selectRandom _hqBuildingPositions);
-					[(units _grp),1] call _fn_setAISkill;
-					_grp3 = createGroup [_side,TRUE];
-					for '_x' from 0 to ((_vParaV emptyPositions 'CARGO') - 1) step 1 do {
-						_unitType = selectRandom _unitTypes;
-						_unit = _grp3 createUnit [_unitType,[0,0,0],[],0,'NONE'];
-						missionNamespace setVariable [
-							'QS_analytics_entities_created',
-							((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
-							FALSE
-						];
-						_unit = _unit call _fn_unitSetup;
-						_unit assignAsCargo _vParaV;
-						_unit moveInCargo _vParaV;
-						0 = _allArray pushBack _unit;
+					if ((_vParaV emptyPositions 'CARGO') > 0) then {
+						_grp3 = createGroup [_side,TRUE];
+						for '_x' from 0 to ((_vParaV emptyPositions 'CARGO') - 1) step 1 do {
+							_unitType = selectRandom _unitTypes;
+							_unit = _grp3 createUnit [_unitType,[0,0,0],[],0,'NONE'];
+							missionNamespace setVariable [
+								'QS_analytics_entities_created',
+								((missionNamespace getVariable 'QS_analytics_entities_created') + 1),
+								FALSE
+							];
+							_unit = _unit call _fn_unitSetup;
+							_unit assignAsCargo _vParaV;
+							_unit moveInCargo _vParaV;
+							0 = _allArray pushBack _unit;
+						};
+						_grp3 move (selectRandom _hqBuildingPositions);
+						[(units _grp3),1] call _fn_setAISkill;
 					};
-					_grp3 move (selectRandom _hqBuildingPositions);
-					[(units _grp3),1] call _fn_setAISkill;
 					_openHeight = _vParaHeightMin + (random _vParaHeightRandom);
 					[_vParaV,_openHeight] spawn (missionNamespace getVariable 'QS_fnc_paraDrop');
 					_vParaV lock 3;
@@ -1242,9 +1233,8 @@ for '_x' from 0 to 1 step 0 do {
 				clearWeaponCargoGlobal _jet;
 				clearItemCargoGlobal _jet;
 				clearBackpackCargoGlobal _jet;
-				createVehicleCrew _jet;
+				_grp = createVehicleCrew _jet;
 				missionNamespace setVariable ['QS_analytics_entities_created',((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _jet))),FALSE];
-				_grp = group (driver _jet);
 				[_grp,_centerPos,FALSE] call _fn_taskAttack;
 				_grp enableAttack TRUE;
 				_grp lockWP TRUE;
@@ -1277,7 +1267,7 @@ for '_x' from 0 to 1 step 0 do {
 				['setFeatureType',_helicopter,2] remoteExec ['QS_fnc_remoteExecCmd',-2,_helicopter];
 				0 = _allArray pushBack _helicopter;
 				0 = _helicopterArray pushBack _helicopter;
-				createVehicleCrew _helicopter;
+				_grp = createVehicleCrew _helicopter;
 				missionNamespace setVariable [
 					'QS_analytics_entities_created',
 					((missionNamespace getVariable 'QS_analytics_entities_created') + (count (crew _helicopter))),
@@ -1295,10 +1285,9 @@ for '_x' from 0 to 1 step 0 do {
 					_helicopter setVariable ['QS_V_availableCargo',(round((_helicopter emptyPositions 'Cargo') * 2)),FALSE];
 					_helicopter setVariable ['QS_V_dropInterval',(time + 10),FALSE];
 				};
-				_grp = group (driver _helicopter);
 				[_grp,_centerPos,FALSE] call _fn_taskAttack;
 				_grp lockWP TRUE;
-				_grp setBehaviour 'AWARE';
+				_grp setBehaviourStrong 'AWARE';
 				_grp setCombatMode 'RED';
 				_grp setSpeedMode 'FULL';
 				_grp enableAttack TRUE;

@@ -17,10 +17,13 @@ private _vehicle = vehicle player;
 if (unitIsUav cameraOn) then {
 	if ((toLower (typeOf cameraOn)) in [
 		'b_ugv_01_f',
+		'b_t_ugv_01_olive_f',
 		'o_ugv_01_f',
 		'o_t_ugv_01_ghex_f',
 		'i_ugv_01_f',
-		'c_idap_ugv_01_f'
+		'c_idap_ugv_01_f',
+		'i_e_ugv_01_f',
+		'i_e_ugv_01_rcws_f'
 	]) then {
 		_vehicle = cameraOn;
 	};

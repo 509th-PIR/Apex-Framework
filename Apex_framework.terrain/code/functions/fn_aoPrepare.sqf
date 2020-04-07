@@ -84,23 +84,27 @@ missionNamespace setVariable ['QS_classic_subObjectiveData',_subObjectiveData,FA
 _nearestLocations = nearestLocations [_QS_AOpos,['NameVillage','NameCity','NameCityCapital'],(_aoSize * 1.1)];
 if (!(_nearestLocations isEqualTo [])) then {
 	_nearestLocation = _nearestLocations select 0;
-	missionNamespace setVariable [
-		'QS_primaryObjective_civilians',
-		([(locationPosition _nearestLocation),300,'FOOT',([6,10] select (diag_fps > 20)),FALSE] call (missionNamespace getVariable 'QS_fnc_spawnAmbientCivilians')),
-		FALSE
-	];
+	if (!((missionNamespace getVariable ['QS_missionConfig_AmbCiv',1]) isEqualTo 0)) then {
+		missionNamespace setVariable [
+			'QS_primaryObjective_civilians',
+			([(locationPosition _nearestLocation),300,'FOOT',([10,5] select ((count allPlayers) > 40)),FALSE] call (missionNamespace getVariable 'QS_fnc_spawnAmbientCivilians')),
+			FALSE
+		];
+	};
 	//comment 'Random vehicles';
 	[] call (missionNamespace getVariable 'QS_fnc_aoRandomVehicles');
 };
 
 /*/======================================================================= ANIMAL SITE/*/
 
-for '_x' from 0 to 2 step 1 do {
-	[
-		(['RADIUS',_QS_AOpos,(_aoSize * 1.1),'LAND',[],FALSE,[],[],TRUE] call (missionNamespace getVariable 'QS_fnc_findRandomPos')),
-		(selectRandomWeighted ['SHEEP',3,'GOAT',2,'HEN',1]),
-		(round (3 + (random 3)))
-	] call (missionNamespace getVariable 'QS_fnc_aoAnimals');
+if (!((missionNamespace getVariable ['QS_missionConfig_AmbAnim',1]) isEqualTo 0)) then {
+	for '_x' from 0 to 2 step 1 do {
+		[
+			(['RADIUS',_QS_AOpos,(_aoSize * 1.1),'LAND',[],FALSE,[],[],TRUE] call (missionNamespace getVariable 'QS_fnc_findRandomPos')),
+			(selectRandomWeighted ['SHEEP',3,'GOAT',2,'HEN',1]),
+			(round (3 + (random 3)))
+		] call (missionNamespace getVariable 'QS_fnc_aoAnimals');
+	};
 };
 diag_log '****************************************************';
 diag_log '***** AO PREPARE ******* 6 *************************';
@@ -114,7 +118,7 @@ if ((random 1) > 0.5) then {
 
 /*/======================================================================= UXOs/*/
 
-if ((random 1) > 0) then {
+if ((random 1) > 0.5) then {
 	missionNamespace setVariable [
 		'QS_ao_UXOs',
 		([_QS_AOpos,_aoSize,(10 + (round (random 10))),[]] call (missionNamespace getVariable 'QS_fnc_aoCreateUXOfield')),

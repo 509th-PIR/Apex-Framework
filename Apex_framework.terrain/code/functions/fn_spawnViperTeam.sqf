@@ -33,7 +33,7 @@ _unitTypes = [
 		'o_v_soldier_medic_ghex_f',0.2,
 		'o_v_soldier_ghex_f',0.6
 	]
-] select (worldName isEqualTo 'Tanoa');
+] select (worldName in ['Tanoa','Enoch']);
 if (_type in ['CLASSIC','SC']) exitWith {
 	comment 'Position';
 	private _centerPos = missionNamespace getVariable ['QS_aoPos',[0,0,0]];
@@ -85,12 +85,14 @@ if (_type in ['CLASSIC','SC']) exitWith {
 				if ((random 1) > 0.5) then {
 					params ['_u','','','_i'];
 					if (local _u) then {
-						if (alive _i) then {
-							if ((side _i) isEqualTo WEST) then {
-								if ((stance _u) in ['CROUCH','STAND']) then {
-									_u playAction (selectRandom ['TactLB','TactRB','TactL','TactR','TactLF','TactRf']);
-									if ((random 1) > 0.5) then {
+						if (((vectorMagnitude (velocity _u)) * 3.6) < 0.5) then {
+							if (alive _i) then {
+								if ((side _i) isEqualTo WEST) then {
+									if ((stance _u) in ['CROUCH','STAND']) then {
 										_u playAction (selectRandom ['TactLB','TactRB','TactL','TactR','TactLF','TactRf']);
+										if ((random 1) > 0.5) then {
+											_u playAction (selectRandom ['TactLB','TactRB','TactL','TactR','TactLF','TactRf']);
+										};
 									};
 								};
 							};

@@ -6,7 +6,7 @@ Author:
 	
 Last modified:
 
-	8/03/2018 A3 1.80 by Quiksilver
+	30/04/2019 A3 1.92 by Quiksilver
 	
 Description:
 
@@ -14,4 +14,7 @@ Description:
 ____________________________________________________/*/
 
 params ['_array1','_array2'];
-[(((_array1 select 0) select 0) * (_array2 select 0)) + (((_array1 select 0) select 1) * (_array2 select 1)),(((_array1 select 1) select 0) * (_array2 select 0)) + (((_array1 select 1) select 1) * (_array2 select 1))];
+[
+	(((_array1 # 0) # 0) * (_array2 # 0)) + (((_array1 # 0) # 1) * (_array2 # 1)),
+	(((_array1 # 1) # 0) * (_array2 # 0)) + (((_array1 # 1) # 1) * (_array2 # 1))
+];

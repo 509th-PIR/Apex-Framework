@@ -6,7 +6,7 @@ Author:
 	
 Last Modified:
 
-	29/08/2018 A3 1.84 by Quiksilver
+	24/04/2018 A3 1.90 by Quiksilver
 	
 Description:
 
@@ -108,28 +108,28 @@ if (worldName isEqualTo 'Tanoa') then {
 	if (_skillLevel isEqualTo 1) then {
 		_aimingAccuracy = 	[_aimingAccuracyDefault,0.14] select ((random 1) > 0.5);
 		_aimingShake = 		random [0.55,0.6,0.65];
-		_aimingSpeed = 		random [0.35,0.4,0.45];
+		_aimingSpeed = 		random [0.4,0.45,0.5];
 		_commanding = 		1;
 		_courage = 			1;
 		_endurance = 		1;
 		_general = 			1;
-		_reloadSpeed = 		random [0.45,0.5,0.55];
-		_spotDistance = 	random [0.45,0.5,0.55];
-		_spotTime = 		random [0.45,0.5,0.55];
+		_reloadSpeed = 		random [0.5,0.55,0.6];
+		_spotDistance = 	random [0.55,0.6,0.65];
+		_spotTime = 		random [0.55,0.6,0.65];
 		_fleeing = 			0;
 	};
 	// hard skill
 	if (_skillLevel isEqualTo 2) then {
 		_aimingAccuracy = 	[_aimingAccuracyDefault,0.14] select ((random 1) > 0.5);
 		_aimingShake = 		random [0.6,0.65,0.7];
-		_aimingSpeed = 		random [0.4,0.45,0.5];
+		_aimingSpeed = 		random [0.5,0.55,0.6];
 		_commanding = 		1;
 		_courage = 			1;
 		_endurance = 		1;
 		_general = 			1;
 		_reloadSpeed = 		random [0.8,0.85,0.9];
-		_spotDistance = 	random [0.55,0.6,0.65];
-		_spotTime = 		random [0.45,0.5,0.55];
+		_spotDistance = 	random [0.65,0.7,0.75];
+		_spotTime = 		random [0.65,0.7,0.75];
 		_fleeing = 			0;
 	};
 	// very hard skill
@@ -163,7 +163,7 @@ if (worldName isEqualTo 'Tanoa') then {
 };
 {
 	_unit = _x;
-	_unit setSkill 0.1;
+	_unit setSkill 0.5;
 	_unit allowFleeing _fleeing;
 	{
 		_unit setSkill _x;
