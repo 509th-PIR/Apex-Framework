@@ -124,7 +124,7 @@ _infostand_1 = ['media\images\billboards\billboard5.jpg','media\images\billboard
 _infostand_2 = ['media\images\billboards\billboard6.jpg','media\images\billboards\billboard6.jpg'];							// Textures applied to info stands (V2) in default base. These parameters act as randomized arrays. Put more file paths in the [ ] array as desired. Example:   ['media\images\billboards\billboard3.jpg','media\images\billboards\billboard4.jpg'];
 
 //===================================================== SECURITY
-
+#include "server_command_password.sqf"
 _serverCommandPassword = "'ShVQArtpGdc5aDQq'";			// Enter a server command password like this. It MUST match servercommandpassword from your server.cfg config file. ---> serverCommandPassword = "ShVQArtpGdc5aDQq"; This is important and some mission systems will not function without it.
 _anticheat = 1;											// 0 - Disabled. 1 - Enabled. (Default 1). 		Disable if running mods or in private/secure setting.
 

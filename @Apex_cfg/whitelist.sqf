@@ -62,16 +62,23 @@ if (_type isEqualTo 'OPFOR') then {
 if (_type isEqualTo 'ALL') then {
 	/*/ All staff UIDs (does not grant permissions/menus, that stuff is below). Robocop reports trolling events and hacking events to these people though./*/
 	_return = [
+		'76561198277313876', //  Michael
+		'76561198024812575', // CPT. dohop0
+		'76561198079493776', //Donov
 		'76561100000000000',
-		'76561100000000000'
+		'76561100000000000',
+		'76561100000000000'  
 	];
 };
 //================================================== ADMIN IDs/*/
 if (_type isEqualTo 'ADMIN') then {
 	/*/ Admin UIDs. These IDs have access to all admin tools below Developer access. They do not have Debug Console.  - remove ID from MODERATOR IDs/*/
 	_return = [
+		'76561198024812575', // CPT. dohop0
+		'76561198079493776', //Donov
 		'76561100000000000',
-		'76561100000000000'
+		'76561100000000000',
+		'76561100000000000'  
 	];
 };
 //================================================== MODERATOR IDS/*/
@@ -102,15 +109,19 @@ if (_type isEqualTo 'MEDIA') then {
 if (_type isEqualTo 'CURATOR') then {
 	/*/Zeus. These IDs have access to Zeus and mission curation functionality. They can suspend side missions and main missions, and cycle main missions (this is done on "air defense laptop" at base)./*/
 	_return = [
+		'76561198277313876', //  Michael
+		'76561198024812575', // CPT. dohop0
+		'76561198079493776',//donov
 		'76561100000000000',
-		'76561100000000000'
+		'76561100000000000',
+		'76561100000000000'  
 	];
 };
 //================================================== DEVELOPER IDS/*/
 if (_type isEqualTo 'DEVELOPER') then {
 	/*/ Developer UIDs. These IDs have access to integrated Debug Console (execution is logged and filtered) and all other ingame tools./*/
 	_return = [
-		'76561100000000000',
+		'76561198277313876', //  Michael
 		'76561100000000000'
 	];
 };
