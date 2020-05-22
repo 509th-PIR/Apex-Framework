@@ -21,17 +21,18 @@ _______________________________________________________/*/
 diag_log '***** CHAT MESSAGES LOADED *****';
 
 [
-	'Chat message 1',
-	'Chat message 2',
+	'Welcome to the 509th Parachute Infantry Regiment Invade and Annex server!',
+	'Please make sure to read the rules and follow them to prevent yourself from being kicked or banned from our servers!',
 	'Press [End] for Earplugs',
 	'Press [Home] for Player Menu',
 	'Press [Ctrl]+[R] to Repack Magazines',
 	'Double-tap [J] to view Tasks',
-	'Chat message 7',
-	'Chat message 8',
+	'Feel free to join our teamspeak and chat! @ geronimo509.ts.nfoservers.com',
+	'Want to donate to keep the server running? Press [Home] and follow the link to donate ',
+	'Server restarts every 12 hours',
+	'Pilots need to be in Teamspeak or discord voice',
 	
 	
 	
 	
 	''
-]

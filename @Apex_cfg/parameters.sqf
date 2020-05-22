@@ -39,41 +39,41 @@ _teamspeak_server = 'ts3.address.com : 1234     - Password: N/A';					// Teamspe
 																					// These options can be seen in your Player Menu under [Comm-Link]. Player menu default key binding is [Home], and also in the Escape menu, top button.
 _website_url = 
 [
-	"'https://goo.gl/7Xajd9'",														// Website URL of your website		Example:	"'https://goo.gl/7Xajd9'"
+	"'http://509thpir.hosted.nfoservers.com/forums/viewforum.php?f=4&sid=c21eb713f0e13dd05f674a0ab98b1c54'",														// Website URL of your website		Example:	"'https://goo.gl/7Xajd9'"
 	"Our Website",																	// Button text.
 	"Link 1"																		// Tooltip (text shown when mouse hovering over button).
 ];
 _discord_server = 
 [
-	"'https://goo.gl/7Xajd9'",														// Discord server (change this to yours).	Example:	"'https://goo.gl/7Xajd9'"
+	"'https://discord.gg/NtPBrSt'",														// Discord server (change this to yours).	Example:	"'https://goo.gl/7Xajd9'"
 	"Our Discord",																	// Button text.
 	"Link 2"																		// Tooltip (text shown when mouse hovering over button).
 ];
 _arma_units_url = 
 [
-	"'https://units.arma3.com'", 													// url path to your A3 Unit		Example:	"'https://goo.gl/7Xajd9'"
+	"'https://units.arma3.com/unit/509pir'", 													// url path to your A3 Unit		Example:	"'https://goo.gl/7Xajd9'"
 	"Our ArmA Unit",																// Button text.
 	"Link 3"																		// Tooltip (text shown when mouse hovering over button).
 ];
 
 _serverRules = '- No teamkilling<br/>- No destruction of friendly assets<br/>- No advertising<br/>- No verbal abuse<br/>- Pilots and UAV operator must be on Teamspeak<br/>- Staff word is final';		// Server rules shown on splash screen text. Structured Text. Note: There are more rules listed in "code\functions\fn_clientDiary.sqf", edit that file to your liking.
-_staffNames = 'Miller (admin), Kerry (moderator), Stavrou (moderator), Orestes (mission editor)';						// This text gets shown on the splash screen when player enters the game, customize as you like.
+_staffNames = 'Sgt. Michael (Mission Editor)';						// This text gets shown on the splash screen when player enters the game, customize as you like.
 
 //===================================================== GAMEPLAY
 
 _baseLayout = 0;										// Base layout.	0 - Integrated base. 1 - Custom base.		Note: With custom base, you will have to define all the spawn points and set all the marker positions manually. Caution: Its a lot of work!
-_closeAirSupport = 3;									// Jets.		0 - Disabled. 1 - Whitelisted only. 2 - Enabled. 3 - Whitelisted+Linked to Pilot Transport Points.     This controls Fixed-wing Jets access. If Disabled, players will not have access to Jets and Armed UAV drones will not spawn.
-_arsenal = 1;											// Arsenal.		0 - Unrestricted (scripted). 1 - Use Whitelist (scripted). 2 - Use Blacklist (scripted). 3 - Vanilla arsenal (unscripted).	(Recommended = 1).			Caution! Blacklist is unconfigured by default, you will have to do it. Only whitelist comes pre-configured.    #3 will disable scripted gear restrictions.
+_closeAirSupport = 2;									// Jets.		0 - Disabled. 1 - Whitelisted only. 2 - Enabled. 3 - Whitelisted+Linked to Pilot Transport Points.     This controls Fixed-wing Jets access. If Disabled, players will not have access to Jets and Armed UAV drones will not spawn.
+_arsenal = 0;											// Arsenal.		0 - Unrestricted (scripted). 1 - Use Whitelist (scripted). 2 - Use Blacklist (scripted). 3 - Vanilla arsenal (unscripted).	(Recommended = 1).			Caution! Blacklist is unconfigured by default, you will have to do it. Only whitelist comes pre-configured.    #3 will disable scripted gear restrictions.
 _armor = 1;												// Armored Vehicles.	0 - Disabled. 1 - Enabled. (Default = 1). 		Controls whether players have access to respawning armored vehicles with default layout.
 _reducedDamage = 1;										// Damage Modeling.		0 - Disabled. 1 - Enabled. (Default/Recommended 1).		Controls whether players have added body armor and dynamic damage modeling to balance ArmA AI accuracy/aimbot shortcomings, especially in jungle/forest areas. Recommended: 1.
 _stamina = 0;											// Stamina.		0 - Optional. 1 - Forced On.	(Default: 0). If optional, players can toggle in menu.
 _enemyCAS = 1;											// Enemy Fixed-Wing Aircraft.	0 - Disabled. 1 - Enabled. (Default = 1). Controls whether enemy have access to fixed-wing planes.
-_commander = 2;											// Commander role. 0 - Disabled. 1 - Enabled. 2 - Enabled & Whitelisted. (Default = 2). Commander role has the ability to give player groups and AI groups orders and waypoints, can talk on Side Channel, and view bodycam live feeds of any soldier.
+_commander = 1;											// Commander role. 0 - Disabled. 1 - Enabled. 2 - Enabled & Whitelisted. (Default = 2). Commander role has the ability to give player groups and AI groups orders and waypoints, can talk on Side Channel, and view bodycam live feeds of any soldier.
 _artillery = 1;											// Base artillery.	0 - Disabled. 1 - Enabled. 	If enabled, a self-propelled artillery asset is available for use. Does not affect Mk.6 mortars access. Does not affect naval artillery.
 _artilleryComputer = 1;									// Artillery Computer settings. 	0. Disabled. 	1 - Enabled ONLY while in scripted base artillery.		2 - Enabled. (Recommended = 1). Note: Applies to mortars as well.
 _mapContentEnemy = 1;									// Enemy Map Indicators. 	0 - Disabled. 1 - Enabled. Recommended = 1.	    Controls whether enemies known to the player are visible on the map.
 _recruitableAI = 1;										// Recruitable AI.	0 - Disabled. 1 - Enabled. 		If there are recruitable AI available (default base layout or placed by you in custom base layout), this toggles them on or off.
-_playable_opfor = 0;									// OPFOR player roles. 	0 - Disabled. 1 - Enabled (Whitelisted). 2 - Enabled (Unrestricted).	Recommended = 0.	Enable a limited number of enemy player roles for the supported mission types. Highly recommended to NOT use with the standard missions unless you know your players are comfortable with it. Designed for future Framework flexibility and development.
+_playable_opfor = 1;									// OPFOR player roles. 	0 - Disabled. 1 - Enabled (Whitelisted). 2 - Enabled (Unrestricted).	Recommended = 0.	Enable a limited number of enemy player roles for the supported mission types. Highly recommended to NOT use with the standard missions unless you know your players are comfortable with it. Designed for future Framework flexibility and development.
 _ambient_civilians = 1;									// Ambient Civilians.	0 - Disabled. 1 - Enabled. Default = 1.		Disable to save FPS. 	Ambient civilian presence is auto-disabled when player count > 50.
 _ambient_animals = 1;									// Ambient Animals.		0 - Disabled. 1 - Enabled. Default = 1.		Disable to save FPS.	Ambient animal presence is auto-disabled when player count > 50.
 _vehicle_active_protection = 3;							// Vehicle Active Protection System. 	0 - Disabled. 1 - AI only. 2 - Players only. 3 - AI and players.
@@ -101,17 +101,17 @@ _sideMissions = 1;										// Side Missions.	0 - Disabled. 1 - Enabled. (Defaul
 
 //===================================================== STATIC SHIPS
 // Aircraft Carrier
-_aircraft_carrier_enabled = 0;								// Presence.			0 - Disabled. 1 - Enabled. 2 - Enabled + Turret Defenses.    Note: Turret defenses will consume server/AI/CPU performance resources, recommended to not use.
+_aircraft_carrier_enabled = 1;								// Presence.			0 - Disabled. 1 - Enabled. 2 - Enabled + Turret Defenses.    Note: Turret defenses will consume server/AI/CPU performance resources, recommended to not use.
 _aircraft_carrier_vehicles = 1;								// Vehicle Spawning.	0 - None. 1 - Basic. 2 - Full.		This will interfere with _closeAirSupport config above, if Full (2) is used.  These are vehicles which spawn as part of the aircraft carrier package.
 _aircraft_carrier_respawning = 1;							// Player Spawning.		0 - None. 1 - Jet pilots only. 2 - All players.		Mission designed for options 0 and 1 only. Advised to only use 2 if AO type == 'NONE' or on closed server.
 // Destroyer
-_destroyer_enabled = 0;										// Presence.			0 - Disabled. 1 - Enabled. 2 - Enabled + Turret Defenses.    Note: Turret defenses will consume server/AI/CPU performance resources, recommended to not use.
+_destroyer_enabled = 1;										// Presence.			0 - Disabled. 1 - Enabled. 2 - Enabled + Turret Defenses.    Note: Turret defenses will consume server/AI/CPU performance resources, recommended to not use.
 _destroyer_vehicles = 1;									// Vehicle Spawning.	0 - None. 1 - Basic. 2 - Full. These are vehicles which spawn as part of the destroyer package. 1 = boats only, 2 = boats + helicopter.
 _destroyer_respawning = 0;									// Player Spawning.		0 - None. 1 - All players will (re)spawn on the ship. 		Note: This option is overridden by  "_aircraft_carrier_respawning" option above. Jet pilots will also respawn on the carrier, even if both are available.
 _destroyer_artillery = 0;									// Naval Artillery.		0 - Disabled. 1 - Enabled.	Recommended = 0.	Enable the MK41 VLS Missile Artillery System & MK45 Hammer Naval Gun.
 _destroyer_flag = 'a3\data_f\flags\flag_us_co.paa';			// Texture applied to Destroyer flag. Default:  'a3\data_f\flags\flag_us_co.paa'
 _destroyer_name = 'a3\boat_f_destroyer\destroyer_01\data\destroyer_01_tag_01_co.paa';		// Name presented on stern of ship. Comes with 7 defaults, just change ..._tag_01_co... to _tag_02_co... etc, from 01 to 07, 00 is blank. You can also set as a custom texture/name/logo.
-_destroyer_numbers = [6,6,6];								// Numbers shown on the ship hull.
+_destroyer_numbers = [5,0,9];								// Numbers shown on the ship hull.
 _destroyer_hangar = 1;										// Hangar Door initial state. 0 - Hangar doors start closed. 1 - Hangar doors start opened.
 //===================================================== TEXTURES
 
@@ -133,13 +133,13 @@ _anticheat = 1;											// 0 - Disabled. 1 - Enabled. (Default 1). 		Disable i
 // Cosmetics system (uniform + vehicle + shoulder patches). 	
 // Controls access to [Area 51] vehicle/uniform/insignia texture system.
 
-_monetizeCosmetics = 0;									// 0 - Disabled (None have access). 1 - Enabled (Only whitelisted "S3" have access). 2 - All have access.
+_monetizeCosmetics = 2;									// 0 - Disabled (None have access). 1 - Enabled (Only whitelisted "S3" have access). 2 - All have access.
 
 // Link for direct donations toward your server/community + whitelisting + cosmetics,etc. Replace this with your own, or leave blank.
 // This option can be seen in your Player Menu under [Comm-Link]. Player menu default key binding is [Home], and also in the Escape menu, top button.
 
 _monetizeURL = [
-	"'https://goo.gl/7Xajd9'",											// Monetization URL.
+	"'https://paypal.me/pools/c/8hsgKFkybJ'",											// Monetization URL.
 	"Donate",															// Button text.
 	"Link 4"															// Tooltip (text shown when mouse hovering over button).
 ];
