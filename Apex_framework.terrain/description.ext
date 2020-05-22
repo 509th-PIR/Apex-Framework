@@ -13,8 +13,8 @@ Description:
 	https://community.bistudio.com/wiki/Description.ext
 ____________________________________________/*/
 
-author = "Quiksilver";												/*/ Visible when loading mission/*/
-onLoadName = "Invade & Annex";										/*/ Visible when loading mission/*/
+author = "Quiksilver, Maintained by Michael";												/*/ Visible when loading mission/*/
+onLoadName = "509th PIR Invade & Annex";										/*/ Visible when loading mission/*/
 onLoadMission = "";
 loadScreen = __EVAL(selectRandom ["media\images\loadScreens\loading_0.jpg","media\images\loadScreens\loading_1.paa","media\images\loadScreens\loading_2.paa","media\images\loadScreens\loading_3.paa","media\images\loadScreens\loading_4.paa","media\images\loadScreens\loading_5.paa","media\images\loadScreens\loading_6.paa","media\images\loadScreens\loading_7.paa","media\images\loadScreens\loading_8.paa","media\images\loadScreens\loading_9.paa"]);
 overviewPicture = __EVAL(selectRandom ["media\images\loadScreens\loading_0.jpg","media\images\loadScreens\loading_1.paa","media\images\loadScreens\loading_2.paa","media\images\loadScreens\loading_3.paa","media\images\loadScreens\loading_4.paa","media\images\loadScreens\loading_5.paa","media\images\loadScreens\loading_6.paa","media\images\loadScreens\loading_7.paa","media\images\loadScreens\loading_8.paa","media\images\loadScreens\loading_9.paa"]);
@@ -271,6 +271,25 @@ class CfgDebriefing {
 		description = "You must play on the server more prior to using the Pilot roles";
 		picture = "\a3\UI_F_Jets\Data\CfgUnitInsignia\jets_patch_01.paa";	
 	};
+	class AdminMod 
+    {
+        title = "Admin/Cheat Mod Detected ";
+        subtitle = "";
+        description = "Remove Admin Mods or vehicle spawn mods, Mods that reveal Enemy and Rejoin Ie Crosscom ect. ";
+        pictureBackground = "";
+        picture = "";
+        pictureColor[] = {0.0,0.3,0.6,1};
+    };
+	
+	class RestrictedMods
+    {
+        title = "Out of Date/Error producing Mod Detected ";
+        subtitle = "";
+        description = "Remove TF47,BloodLust,Bullet Casings mods, NIArms Minigun, Suitcase Nuke and Ravage due to bugs, and Rejoin. ";
+        pictureBackground = "";
+        picture = "";
+        pictureColor[] = {0.0,0.3,0.6,1};
+    };
 };
 class CfgLeaflets {
 	class East {

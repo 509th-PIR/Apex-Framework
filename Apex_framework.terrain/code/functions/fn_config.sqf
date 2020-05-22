@@ -207,7 +207,7 @@ if ((missionNamespace getVariable ['QS_missionConfig_baseLayout',0]) isEqualTo 0
 	{
 		if (!isNull _x) then {
 			if (!(_x isKindOf 'Logic')) then {
-				if (!(_x getVariable ['QS_missionObject_protected',FALSE])) then {
+                if (!((toLower (typeOf _x)) in ["flag_blue_f"])) then { // things i want not no get deleted by the Mission
 					deleteVehicle _x;
 				};
 			};
