@@ -27,7 +27,7 @@ diag_log '***** CHAT MESSAGES LOADED *****';
 	'Press [Home] for Player Menu',
 	'Press [Ctrl]+[R] to Repack Magazines',
 	'Double-tap [J] to view Tasks',
-	'Feel free to join our teamspeak and chat! @ geronimo509.ts.nfoservers.com',
+	'Feel free to join our teamspeak and chat! 509pir.us',
 	'Want to donate to keep the server running? Press [Home] and follow the link to donate ',
 	'Server restarts every 12 hours',
 	'Pilots need to be in Teamspeak or discord voice',

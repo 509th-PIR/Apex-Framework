@@ -35,18 +35,18 @@ _______________________________________________________/*/
 
 //===================================================== COMMUNITY / SERVER
 
-_teamspeak_server = 'ts3.address.com : 1234     - Password: N/A';					// Teamspeak server address, for use with map marker, map tabs, ec. Customize this accordingly.		Example:	_teamspeak_server = 'ts3.address.com : 1234     - Password: N/A';
-																					// These options can be seen in your Player Menu under [Comm-Link]. Player menu default key binding is [Home], and also in the Escape menu, top button.
+_teamspeak_server = '509pir.us - Password: N/A';					// Teamspeak server address, for use with map marker, map tabs, ec. Customize this accordingly.		Example:	_teamspeak_server = 'ts3.address.com : 1234     - Password: N/A';
+// These options can be seen in your Player Menu under [Comm-Link]. Player menu default key binding is [Home], and also in the Escape menu, top button.
 _website_url = 
 [
 	"'http://509thpir.hosted.nfoservers.com/forums/viewforum.php?f=4&sid=c21eb713f0e13dd05f674a0ab98b1c54'",														// Website URL of your website		Example:	"'https://goo.gl/7Xajd9'"
-	"Our Website",																	// Button text.
+	"Join Today",																	// Button text.
 	"Link 1"																		// Tooltip (text shown when mouse hovering over button).
 ];
 _discord_server = 
 [
 	"'https://discord.gg/NtPBrSt'",														// Discord server (change this to yours).	Example:	"'https://goo.gl/7Xajd9'"
-	"Our Discord",																	// Button text.
+	"509th Discord",																	// Button text.
 	"Link 2"																		// Tooltip (text shown when mouse hovering over button).
 ];
 _arma_units_url = 
@@ -126,7 +126,7 @@ _infostand_2 = ['media\images\billboards\billboard6.jpg','media\images\billboard
 //===================================================== SECURITY
 #include "server_command_password.sqf"
 			// Enter a server command password like this. It MUST match servercommandpassword from your server.cfg config file. ---> serverCommandPassword = "ShVQArtpGdc5aDQq"; This is important and some mission systems will not function without it.
-_anticheat = 1;											// 0 - Disabled. 1 - Enabled. (Default 1). 		Disable if running mods or in private/secure setting.
+_anticheat = 0;											// 0 - Disabled. 1 - Enabled. (Default 1). 		Disable if running mods or in private/secure setting.
 
 //===================================================== MONETIZATION
 
@@ -139,8 +139,8 @@ _monetizeCosmetics = 2;									// 0 - Disabled (None have access). 1 - Enabled 
 // This option can be seen in your Player Menu under [Comm-Link]. Player menu default key binding is [Home], and also in the Escape menu, top button.
 
 _monetizeURL = [
-	"'https://paypal.me/pools/c/8hsgKFkybJ'",											// Monetization URL.
-	"Donate",															// Button text.
+	"'https://www.paypal.com/pools/c/8hsgKFkybJ'",											// Monetization URL.
+	"Donate today",															// Button text.
 	"Link 4"															// Tooltip (text shown when mouse hovering over button).
 ];
 
